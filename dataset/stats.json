@@ -1,0 +1,49 @@
+{
+  "exams": {
+    "한의사_81회": {
+      "questions": 337,
+      "clean": 276,
+      "with_figure": 61,
+      "no_answer": 0,
+      "by_gyo": {
+        "1교시": {
+          "count": 79,
+          "source": "single"
+        },
+        "2교시": {
+          "count": 98,
+          "source": "single"
+        },
+        "3교시": {
+          "count": 80,
+          "source": "parts:2"
+        },
+        "4교시": {
+          "count": 80,
+          "source": "parts:2"
+        }
+      }
+    },
+    "한약사_27회": {
+      "questions": 250,
+      "clean": 241,
+      "with_figure": 9,
+      "no_answer": 0,
+      "by_gyo": {
+        "1교시": {
+          "count": 140,
+          "source": "single"
+        },
+        "2교시": {
+          "count": 110,
+          "source": "single"
+        }
+      }
+    }
+  },
+  "total_questions": 587,
+  "clean": 517,
+  "with_figure": 70,
+  "no_answer": 0,
+  "bad_options": 0
+}

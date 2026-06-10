@@ -1,0 +1,6 @@
+openai>=1.40.0
+python-dotenv>=1.0.0
+tqdm>=4.66.0
+# KIOM 용어 스크레이핑(scripts/fetch_terminology.py)
+requests>=2.31.0
+beautifulsoup4>=4.12.0

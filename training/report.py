@@ -47,63 +47,80 @@ def signed(x):
     return ("+" if x >= 0 else "") + f"{x*100:.2f}%p" if x is not None else "—"
 
 
+VLABEL_ATOM = {"base": "베이스", "rag": "용어 RAG", "ft": "파인튜닝", "cot": "CoT"}
+
+
+def vlabel(variant: str) -> str:
+    """variant 문자열을 사람이 읽는 라벨로. 예: 'cot+sc5' → 'CoT+자기일관성×5'."""
+    parts = []
+    for a in variant.split("+"):
+        if a in VLABEL_ATOM:
+            parts.append(VLABEL_ATOM[a])
+        elif a.startswith("sc"):
+            parts.append(f"자기일관성×{a[2:]}")
+        else:
+            parts.append(a)
+    return "+".join(parts)
+
+
 def build_report(results: list[dict], n: int) -> str:
-    def grp(role, variant):
-        return [r for r in results if r.get("role") == role and r.get("variant") == variant]
+    roles = [ROLE_KOREAN, ROLE_GLOBAL] + sorted(
+        {r.get("role") for r in results} - {ROLE_KOREAN, ROLE_GLOBAL})
 
-    def avg(role, variant):
-        return mean([r["accuracy"] for r in grp(role, variant)])
+    def of(role):
+        return [r for r in results if r.get("role") == role]
 
-    korean_base = avg(ROLE_KOREAN, "base")
-    global_base = avg(ROLE_GLOBAL, "base")
-    global_rag = avg(ROLE_GLOBAL, "rag")
-    global_ft = avg(ROLE_GLOBAL, "ft")
+    def base_of(role):
+        b = mean([r["accuracy"] for r in of(role) if r.get("variant") == "base"])
+        return b if b is not None else mean([r["accuracy"] for r in of(role)
+                                             if r.get("variant") == "ft"])
 
-    pair_avg = mean([v for v in (korean_base, global_base) if v is not None]) \
-        if (korean_base is not None and global_base is not None) else None
+    # 표시 순서: base 먼저, 그 외 variant는 정답률 순
+    def ordered(role):
+        rs = of(role)
+        return sorted(rs, key=lambda r: (r.get("variant") != "base", -r["accuracy"]))
 
-    L = ["# 한의학 시험 — 로컬(한국형) vs 글로벌 · 용어 주입 전후 비교\n",
+    L = ["# 한의학 시험 — 로컬(한국형) vs 글로벌 · 방식별 향상 비교\n",
          f"평가 문항 수: **{n}** (그림 문항 제외)\n",
          "## 모델별 정답률\n",
          "| 역할 | 방식 | 모델 | 정답률 | 맞음/전체 |",
          "|---|---|---|---:|---:|"]
-    vlabel = {"base": "베이스", "rag": "용어 RAG", "ft": "파인튜닝"}
-    for role in (ROLE_KOREAN, ROLE_GLOBAL):
-        for variant in ("base", "rag", "ft"):
-            for r in grp(role, variant):
-                L.append(f"| {role} | {vlabel.get(variant, variant)} | `{r['model']}` "
-                         f"| {pct(r['accuracy'])} | {r['correct']}/{r['n']} |")
+    for role in roles:
+        for r in ordered(role):
+            L.append(f"| {role} | {vlabel(r['variant'])} | `{r['model']}` "
+                     f"| {pct(r['accuracy'])} | {r['correct']}/{r['n']} |")
     L.append("")
 
-    L.append("## ① 로컬·글로벌 평균 (학습 전)\n")
-    L.append(f"- 한국형(로컬) 평균: **{pct(korean_base)}**")
-    L.append(f"- 글로벌(베이스) 평균: **{pct(global_base)}**")
-    L.append(f"- **두 모델 평균: {pct(pair_avg)}**\n")
+    kb, gb = base_of(ROLE_KOREAN), base_of(ROLE_GLOBAL)
+    pair = mean([v for v in (kb, gb) if v is not None]) \
+        if (kb is not None and gb is not None) else None
+    L.append("## ① 로컬·글로벌 평균 (베이스)\n")
+    L.append(f"- 한국형(로컬) 평균: **{pct(kb)}**")
+    L.append(f"- 글로벌(범용) 평균: **{pct(gb)}**")
+    L.append(f"- **두 모델 평균: {pct(pair)}**\n")
 
-    L.append("## ② 글로벌 용어 주입/학습 후\n")
-    shown = False
-    for label, val in [("용어 RAG", global_rag), ("파인튜닝", global_ft)]:
-        if val is None:
+    L.append("## ② 방식별 향상 (base 대비 Δ)\n")
+    any_var = False
+    for role in roles:
+        base = base_of(role)
+        extras = [r for r in ordered(role) if r.get("variant") != "base"]
+        if not extras:
             continue
-        shown = True
-        imp = (val - global_base) if global_base is not None else None
-        pair_after = mean([v for v in (korean_base, val) if v is not None]) \
-            if korean_base is not None else None
-        L.append(f"- 글로벌({label}) 평균: **{pct(val)}**  "
-                 f"(향상 Δ {signed(imp)}, 한국형·글로벌 평균 {pct(pair_after)})")
-    if not shown:
-        L.append("- (아직 글로벌 향상 결과 없음 — RAG/파인튜닝 평가 후 재실행)")
-    L.append("")
+        any_var = True
+        L.append(f"**[{role}]** base {pct(base)}")
+        for r in extras:
+            imp = (r["accuracy"] - base) if base is not None else None
+            L.append(f"- {vlabel(r['variant'])}: **{pct(r['accuracy'])}** (Δ {signed(imp)})")
+        L.append("")
+    if not any_var:
+        L.append("- (base 외 방식 결과 없음 — --cot/--sc/--rag 로 평가)\n")
 
-    # 과목별 — 모델별로 한 열씩(역할/방식 표기)
+    # 과목별 — 모델·방식별로 한 열씩
     L.append("## 과목별 정답률 (참고)\n")
-    cols = [r for role in (ROLE_KOREAN, ROLE_GLOBAL) for variant in ("base", "rag", "ft")
-            for r in grp(role, variant)]
+    cols = [r for role in roles for r in ordered(role)]
     subjects = sorted({s for r in cols for s in r.get("by_subject", {})})
     if subjects and cols:
-        def head(r):
-            return f"{r['role']}/{vlabel.get(r['variant'], r['variant'])}"
-        L.append("| 과목 | " + " | ".join(head(r) for r in cols) + " |")
+        L.append("| 과목 | " + " | ".join(f"{r['role']}/{vlabel(r['variant'])}" for r in cols) + " |")
         L.append("|---|" + "---:|" * len(cols))
         for s in subjects:
             cells = [pct(r.get("by_subject", {}).get(s)) for r in cols]

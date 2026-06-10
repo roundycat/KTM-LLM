@@ -38,20 +38,26 @@ def main() -> None:
     ap.add_argument("--no-global", action="store_true", help="글로벌 평가 생략")
     ap.add_argument("--models", nargs="*", help="글로벌 자리 모델 ID(OpenAI/파인튜닝)")
     ap.add_argument("--local-models", nargs="*", help="한국형 자리 로컬 태그")
+    ap.add_argument("--cot", action="store_true", help="CoT 변형 추가")
+    ap.add_argument("--sc", type=int, default=1, help="self-consistency 샘플 수")
+    ap.add_argument("--rag-cot", action="store_true", help="RAG+CoT+SC 결합 변형 추가")
+    ap.add_argument("--local-cot", action="store_true", help="한국형에도 CoT/SC 적용")
     ap.set_defaults(rag=True)
     args = ap.parse_args()
 
     rows = evaluate.select_eval_rows(args.all)
-    index = TermIndex() if args.rag else None
-    if args.rag and (index is None or len(index) == 0):
-        print("[경고] 용어 인덱스 비어있음 → RAG 비활성화 (scripts/fetch_terminology.py 먼저)")
-        args.rag = False
+    targets = evaluate.resolve_targets(args)
+
+    need_rag = any(t["rag"] for t in targets)
+    index = TermIndex() if need_rag else None
+    if need_rag and (index is None or len(index) == 0):
+        print("[경고] 용어 인덱스 비어있음 → RAG 변형 제외 (scripts/fetch_terminology.py 먼저)")
+        targets = [t for t in targets if not t["rag"]]
         index = None
 
-    targets = evaluate.resolve_targets(args)
-    print(f"\n########## 1~4. 평가 ({len(rows)}문항, RAG={'on' if args.rag else 'off'}) ##########")
+    print(f"\n########## 1~4. 평가 ({len(rows)}문항) ##########")
     for t in targets:
-        print(f"  - {t['role']}/{'rag' if t['rag'] else 'base'}: {t['id']} [{t['provider']}]")
+        print(f"  - {t['role']}/{t['variant']}: {t['id']} [{t['provider']}]")
 
     summary = []
     for t in targets:

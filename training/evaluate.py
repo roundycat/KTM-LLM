@@ -28,14 +28,16 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from config import (
-    FULL_DATASET, RESULTS_DIR, SYSTEM_PROMPT, ANSWER_INSTRUCTION,
+    FULL_DATASET, RESULTS_DIR, SYSTEM_PROMPT, ANSWER_INSTRUCTION, COT_ANSWER_INSTRUCTION,
     LOCAL_MODEL, GLOBAL_MODEL, GLOBAL_PROVIDER, ROLE_KOREAN, ROLE_GLOBAL,
     GPT4_FINETUNED_MODEL, GPT5_FINETUNED_MODEL,
     VAL_RATIO, RANDOM_SEED, EVAL_CONCURRENCY, EVAL_MAX_TOKENS,
-    EVAL_MAX_TOKENS_REASONING, EVAL_MAX_TOKENS_LOCAL, EVAL_REASONING_EFFORT,
+    EVAL_MAX_TOKENS_REASONING, EVAL_MAX_TOKENS_LOCAL, EVAL_MAX_TOKENS_COT,
+    EVAL_REASONING_EFFORT, EVAL_SC_SAMPLES, EVAL_SC_TEMPERATURE,
     REQUEST_TIMEOUT, RAG_TOP_K, is_reasoning_model, make_client,
     PROVIDER_OPENAI, PROVIDER_LOCAL,
 )
+from collections import Counter
 from rag import TermIndex, format_injection, question_text
 
 CIRCLED = {"①": 1, "②": 2, "③": 3, "④": 4, "⑤": 5}
@@ -69,12 +71,13 @@ def select_eval_rows(use_all: bool) -> list[dict]:
     return rows[:n_val]
 
 
-def build_prompt(row: dict, rag: bool = False, index: TermIndex | None = None) -> str:
+def build_prompt(row: dict, rag: bool = False, index: TermIndex | None = None,
+                 cot: bool = False) -> str:
     lines = [row["question"].strip(), ""]
     for i, opt in enumerate(row["options"], start=1):
         lines.append(f"{i}. {opt.strip()}")
     lines.append("")
-    lines.append(ANSWER_INSTRUCTION)
+    lines.append(COT_ANSWER_INSTRUCTION if cot else ANSWER_INSTRUCTION)
     prompt = "\n".join(lines)
     if rag and index is not None and len(index):
         inj = format_injection(index.retrieve(question_text(row), k=RAG_TOP_K))
@@ -115,37 +118,30 @@ def parse_answer(text: str) -> int | None:
     return int(nums[-1]) if nums else None
 
 
-def ask(model_id: str, provider: str, row: dict,
-        rag: bool = False, index: TermIndex | None = None) -> int | None:
-    """모델에게 한 문항을 물어 정답 번호(1~5)를 받아 파싱."""
-    client = get_client(provider)
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": build_prompt(row, rag, index)},
-    ]
-
+def _chat_once(client, model_id: str, provider: str, messages: list,
+               max_out: int, temperature: float) -> str:
+    """1회 호출 → 응답 텍스트. provider 별 파라미터 차이를 흡수."""
     if provider == PROVIDER_LOCAL:
         resp = client.chat.completions.create(
             model=model_id, messages=messages,
-            max_tokens=EVAL_MAX_TOKENS_LOCAL, temperature=0, timeout=REQUEST_TIMEOUT)
-        return parse_answer(resp.choices[0].message.content or "")
+            max_tokens=max_out, temperature=temperature, timeout=REQUEST_TIMEOUT)
+        return resp.choices[0].message.content or ""
 
     # --- 클라우드(openai 호환) ---
     reasoning = is_reasoning_model(model_id)
     kwargs = dict(
         model=model_id, messages=messages,
-        max_completion_tokens=EVAL_MAX_TOKENS_REASONING if reasoning else EVAL_MAX_TOKENS,
+        max_completion_tokens=EVAL_MAX_TOKENS_REASONING if reasoning else max_out,
         timeout=REQUEST_TIMEOUT,
     )
     if reasoning:
         kwargs["reasoning_effort"] = EVAL_REASONING_EFFORT
     else:
-        kwargs["temperature"] = 0
+        kwargs["temperature"] = temperature
     try:
         resp = client.chat.completions.create(**kwargs)
     except Exception as e:
-        # reasoning_effort 미지원 모델일 때만 그 파라미터를 빼고 1회 재시도.
-        # 인증/레이트리밋 등 그 외 오류는 상위(worker)의 백오프 재시도에 맡긴다.
+        # reasoning_effort 미지원 모델일 때만 빼고 1회 재시도. 그 외는 상위에 위임.
         msg = str(e).lower()
         if "reasoning_effort" in kwargs and (
                 "reasoning_effort" in msg or "unsupported" in msg or "parameter" in msg):
@@ -153,13 +149,44 @@ def ask(model_id: str, provider: str, row: dict,
             resp = client.chat.completions.create(**kwargs)
         else:
             raise
-    return parse_answer(resp.choices[0].message.content or "")
+    return resp.choices[0].message.content or ""
+
+
+def ask(model_id: str, provider: str, row: dict, rag: bool = False,
+        index: TermIndex | None = None, cot: bool = False, sc_n: int = 1) -> int | None:
+    """한 문항을 물어 정답 번호(1~5)를 받아 파싱.
+
+    - cot : 근거 서술 후 '정답: N' (출력 토큰 예산 ↑)
+    - sc_n: >1 이면 temp>0 으로 sc_n 회 샘플 후 다수결(self-consistency)
+    """
+    client = get_client(provider)
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": build_prompt(row, rag, index, cot)},
+    ]
+    if cot:
+        max_out = EVAL_MAX_TOKENS_COT
+    elif provider == PROVIDER_LOCAL:
+        max_out = EVAL_MAX_TOKENS_LOCAL
+    else:
+        max_out = EVAL_MAX_TOKENS
+
+    if sc_n and sc_n > 1:
+        votes = []
+        for _ in range(sc_n):
+            a = parse_answer(_chat_once(client, model_id, provider, messages,
+                                        max_out, EVAL_SC_TEMPERATURE))
+            if a is not None:
+                votes.append(a)
+        return Counter(votes).most_common(1)[0][0] if votes else None
+    return parse_answer(_chat_once(client, model_id, provider, messages, max_out, 0))
 
 
 def evaluate_model(target: dict, rows: list[dict], index: TermIndex | None = None) -> dict:
     mid, provider = target["id"], target["provider"]
     role, rag = target["role"], target.get("rag", False)
-    variant = target.get("variant") or variant_of(mid, rag)
+    cot, sc_n = target.get("cot", False), target.get("sc", 1)
+    variant = target.get("variant") or variant_of(mid, rag, cot, sc_n)
     tag = f"{role}/{variant}"
     print(f"\n=== 평가: {mid} [{provider}] ({tag}, {len(rows)}문항) ===")
     correct = 0
@@ -170,7 +197,7 @@ def evaluate_model(target: dict, rows: list[dict], index: TermIndex | None = Non
         idx, row = idx_row
         for attempt in range(3):
             try:
-                pred = ask(mid, provider, row, rag, index)
+                pred = ask(mid, provider, row, rag, index, cot, sc_n)
                 return idx, pred, None
             except Exception as e:  # noqa: BLE001
                 if attempt == 2:
@@ -213,82 +240,113 @@ def evaluate_model(target: dict, rows: list[dict], index: TermIndex | None = Non
     }
 
 
-def variant_of(model_id: str, rag: bool) -> str:
+def variant_of(model_id: str, rag: bool = False, cot: bool = False, sc: int = 1) -> str:
+    """방식 라벨. 예: base / rag / cot / cot+sc5 / rag+cot+sc5 / ft."""
+    parts = []
     if rag:
-        return "rag"
-    if str(model_id).startswith("ft:"):
-        return "ft"
-    return "base"
+        parts.append("rag")
+    if cot:
+        parts.append("cot")
+    if sc and sc > 1:
+        parts.append(f"sc{sc}")
+    if not parts:
+        return "ft" if str(model_id).startswith("ft:") else "base"
+    return "+".join(parts)
+
+
+def _spec(m, prov, role, rag=False, cot=False, sc=1):
+    return {"id": m, "provider": prov, "role": role, "rag": rag, "cot": cot, "sc": sc,
+            "variant": variant_of(m, rag, cot, sc)}
 
 
 def resolve_targets(args) -> list[dict]:
-    """평가 대상 스펙(dict) 목록을 만든다."""
-    targets: list[dict] = []
+    """평가 대상 스펙(dict) 목록을 만든다.
 
-    # 한국형(로컬)
+    글로벌 모델엔 base 외에 RAG / CoT / CoT+SC 등 '방식' 변형을 더한다.
+    """
+    targets: list[dict] = []
+    sc_n = getattr(args, "sc", 1) or 1
+    use_cot = getattr(args, "cot", False)
+    local_cot = getattr(args, "local_cot", False)
+    rag_cot = getattr(args, "rag_cot", False)
+
+    # 한국형(로컬) — base(+옵션 변형)
     if not args.no_local:
         for m in (args.local_models or [LOCAL_MODEL]):
-            if m:
-                targets.append({"id": m, "provider": PROVIDER_LOCAL, "role": ROLE_KOREAN,
-                                "rag": False, "variant": "base"})
+            if not m:
+                continue
+            targets.append(_spec(m, PROVIDER_LOCAL, ROLE_KOREAN))
+            if args.rag and args.rag_local:
+                targets.append(_spec(m, PROVIDER_LOCAL, ROLE_KOREAN, rag=True))
+            if local_cot:
+                if use_cot:
+                    targets.append(_spec(m, PROVIDER_LOCAL, ROLE_KOREAN, cot=True))
+                if sc_n > 1:
+                    targets.append(_spec(m, PROVIDER_LOCAL, ROLE_KOREAN, cot=True, sc=sc_n))
 
-    # 글로벌(범용/클라우드) — (모델ID, provider) 스펙으로 구성
+    # 글로벌(범용/클라우드)
     if not args.no_global:
         if args.models:
-            # 사용자가 글로벌 자리에 직접 넣은 모델은 클라우드(OpenAI/호환)로 취급
             g_specs = [(m, PROVIDER_OPENAI) for m in args.models if m]
         else:
             g_specs = [(GLOBAL_MODEL, GLOBAL_PROVIDER)]
             for ft in (GPT4_FINETUNED_MODEL, GPT5_FINETUNED_MODEL):
                 if ft:
-                    g_specs.append((ft, PROVIDER_OPENAI))  # 파인튜닝 모델은 OpenAI
+                    g_specs.append((ft, PROVIDER_OPENAI))
         for m, prov in g_specs:
             if not m:
                 continue
             is_ft = str(m).startswith("ft:")
-            targets.append({"id": m, "provider": prov, "role": ROLE_GLOBAL,
-                            "rag": False, "variant": "ft" if is_ft else "base"})
-            # 파인튜닝 모델엔 RAG 변형을 만들지 않는다(향상 Δ 의미를 분리).
-            if args.rag and not is_ft:
-                targets.append({"id": m, "provider": prov, "role": ROLE_GLOBAL,
-                                "rag": True, "variant": "rag"})
-
-    # 한국형 RAG(옵션)
-    if args.rag and args.rag_local and not args.no_local:
-        for m in (args.local_models or [LOCAL_MODEL]):
-            if m:
-                targets.append({"id": m, "provider": PROVIDER_LOCAL, "role": ROLE_KOREAN,
-                                "rag": True, "variant": "rag"})
+            targets.append(_spec(m, prov, ROLE_GLOBAL))  # base 또는 ft
+            if is_ft:
+                continue  # 파인튜닝 모델엔 추가 방식 변형을 만들지 않음
+            if args.rag:
+                targets.append(_spec(m, prov, ROLE_GLOBAL, rag=True))
+            if use_cot:
+                targets.append(_spec(m, prov, ROLE_GLOBAL, cot=True))
+            if sc_n > 1:
+                targets.append(_spec(m, prov, ROLE_GLOBAL, cot=True, sc=sc_n))
+            if rag_cot and args.rag and sc_n > 1:
+                targets.append(_spec(m, prov, ROLE_GLOBAL, rag=True, cot=True, sc=sc_n))
 
     seen, out = set(), []
     for t in targets:
-        key = (t["id"], t["provider"], t["rag"])
+        key = (t["id"], t["provider"], t["rag"], t["cot"], t["sc"])
         if key not in seen:
             seen.add(key)
             out.append(t)
     return out
 
 
-def _group_avgs(summary: list[dict]) -> dict:
-    """역할·variant 별 평균 정답률을 계산한다."""
-    def avg(role, variant):
-        xs = [r["accuracy"] for r in summary
-              if r.get("role") == role and r.get("variant") == variant]
-        return round(sum(xs) / len(xs), 4) if xs else None
+def _mean(xs):
+    return round(sum(xs) / len(xs), 4) if xs else None
 
-    out = {
-        "korean_base": avg(ROLE_KOREAN, "base"),
-        "korean_rag": avg(ROLE_KOREAN, "rag"),
-        "global_base": avg(ROLE_GLOBAL, "base"),
-        "global_rag": avg(ROLE_GLOBAL, "rag"),
-        "global_ft": avg(ROLE_GLOBAL, "ft"),
-    }
-    if out["korean_base"] is not None and out["global_base"] is not None:
-        out["pair_avg"] = round((out["korean_base"] + out["global_base"]) / 2, 4)
-    if out["global_rag"] is not None and out["global_base"] is not None:
-        out["global_improvement_rag"] = round(out["global_rag"] - out["global_base"], 4)
-    if out["global_ft"] is not None and out["global_base"] is not None:
-        out["global_improvement_ft"] = round(out["global_ft"] - out["global_base"], 4)
+
+def _group_avgs(summary: list[dict]) -> dict:
+    """역할별 base 정답률과, 각 방식(variant)의 정답률·향상(Δ)을 일반적으로 계산."""
+    out = {"roles": {}}
+    role_base = {}
+    for role in [ROLE_KOREAN, ROLE_GLOBAL] + sorted(
+            {r["role"] for r in summary} - {ROLE_KOREAN, ROLE_GLOBAL}):
+        rs = [r for r in summary if r.get("role") == role]
+        if not rs:
+            continue
+        base = _mean([r["accuracy"] for r in rs if r.get("variant") == "base"])
+        if base is None:  # base 가 없으면 ft 를 기준으로
+            base = _mean([r["accuracy"] for r in rs if r.get("variant") == "ft"])
+        role_base[role] = base
+        variants = {}
+        for r in rs:
+            v = r["variant"]
+            variants[v] = {
+                "acc": r["accuracy"],
+                "delta": (round(r["accuracy"] - base, 4) if base is not None else None),
+            }
+        out["roles"][role] = {"base": base, "variants": variants}
+
+    kb, gb = role_base.get(ROLE_KOREAN), role_base.get(ROLE_GLOBAL)
+    if kb is not None and gb is not None:
+        out["pair_avg"] = round((kb + gb) / 2, 4)
     return out
 
 
@@ -307,21 +365,17 @@ def save_results(summary: list[dict], eval_all: bool, n: int) -> dict:
               f"{r['accuracy']*100:7.2f}%  {r['correct']}/{r['n']}")
 
     avgs = _group_avgs(summary)
-    print("\n---------------- 평균 정답률 ----------------")
-    if avgs["korean_base"] is not None:
-        print(f"  한국형(로컬) 평균        : {avgs['korean_base']*100:6.2f}%")
-    if avgs["global_base"] is not None:
-        print(f"  글로벌(베이스) 평균      : {avgs['global_base']*100:6.2f}%")
+    print("\n---------------- 평균 정답률 / 향상 ----------------")
+    for role, d in avgs["roles"].items():
+        print(f"  [{role}] base {(d['base'] or 0)*100:6.2f}%")
+        for v, info in d["variants"].items():
+            if v == "base":
+                continue
+            dl = info["delta"] or 0
+            s = "+" if dl >= 0 else ""
+            print(f"      {v:14s}: {info['acc']*100:6.2f}%  (Δ {s}{dl*100:.2f}%p)")
     if avgs.get("pair_avg") is not None:
-        print(f"  ▶ 한국형+글로벌 두 모델 평균: {avgs['pair_avg']*100:6.2f}%")
-    if avgs["global_rag"] is not None:
-        print(f"  글로벌(용어 RAG) 평균    : {avgs['global_rag']*100:6.2f}%")
-    if avgs.get("global_improvement_rag") is not None:
-        s = "+" if avgs["global_improvement_rag"] >= 0 else ""
-        print(f"  ▶ 글로벌 향상(RAG-베이스): {s}{avgs['global_improvement_rag']*100:.2f}%p")
-    if avgs.get("global_improvement_ft") is not None:
-        s = "+" if avgs["global_improvement_ft"] >= 0 else ""
-        print(f"  ▶ 글로벌 향상(파인튜닝-베이스): {s}{avgs['global_improvement_ft']*100:.2f}%p")
+        print(f"  ▶ 두 모델 평균(base): {avgs['pair_avg']*100:6.2f}%")
 
     with open(RESULTS_DIR / "summary.json", "w", encoding="utf-8") as f:
         json.dump({
@@ -341,21 +395,27 @@ def main() -> None:
     ap.add_argument("--no-global", action="store_true", help="글로벌 평가 생략")
     ap.add_argument("--no-rag", dest="rag", action="store_false", help="RAG(용어 주입) 변형 제외")
     ap.add_argument("--rag-local", action="store_true", help="한국형에도 RAG 적용")
+    ap.add_argument("--cot", action="store_true", help="CoT(근거 후 정답) 변형 추가")
+    ap.add_argument("--sc", type=int, default=1, help="self-consistency 샘플 수(>1이면 CoT+SC 변형)")
+    ap.add_argument("--rag-cot", action="store_true", help="RAG+CoT+SC 결합 변형 추가")
+    ap.add_argument("--local-cot", action="store_true", help="한국형에도 CoT/SC 적용")
     ap.set_defaults(rag=True)
     args = ap.parse_args()
 
     rows = select_eval_rows(args.all)
-    index = TermIndex() if args.rag else None
-    if args.rag and (index is None or len(index) == 0):
-        print("[경고] 용어 인덱스가 비어있음 → RAG 비활성화 (먼저 scripts/fetch_terminology.py 실행)")
-        args.rag = False
+    targets = resolve_targets(args)
+
+    # RAG 변형이 하나라도 있으면 용어 인덱스를 빌드. 비어있으면 RAG 변형 제외.
+    need_rag = any(t["rag"] for t in targets)
+    index = TermIndex() if need_rag else None
+    if need_rag and (index is None or len(index) == 0):
+        print("[경고] 용어 인덱스 비어있음 → RAG 변형 제외 (scripts/fetch_terminology.py 먼저)")
+        targets = [t for t in targets if not t["rag"]]
         index = None
 
-    targets = resolve_targets(args)
-    print(f"평가셋 {len(rows)}문항 | RAG={'on' if args.rag else 'off'}"
-          f"{f'({len(index)} 용어)' if index else ''} | 대상:")
+    print(f"평가셋 {len(rows)}문항 | 용어 {len(index) if index else 0} | 대상:")
     for t in targets:
-        print(f"  - {t['role']}/{'rag' if t['rag'] else 'base'}: {t['id']} [{t['provider']}]")
+        print(f"  - {t['role']}/{t['variant']}: {t['id']} [{t['provider']}]")
 
     summary = []
     for t in targets:

@@ -109,6 +109,13 @@ SYSTEM_PROMPT = (
 # 파인튜닝 정답 형식: 번호만 출력하도록 학습한다.
 ANSWER_INSTRUCTION = "정답 번호(1~5) 하나만 숫자로 출력하세요. 설명은 하지 마세요."
 
+# Track A — 추론 개선(CoT). 근거를 먼저 쓰고 마지막 줄에 '정답: N' 형식으로 답하게 한다.
+#   parse_answer 가 '정답: N' 을 최우선으로 추출하므로 채점이 안정적이다.
+COT_ANSWER_INSTRUCTION = (
+    "다음 순서로 답하세요. 먼저 핵심 근거를 2~3문장으로 간단히 쓰고, "
+    "마지막 줄에 반드시 '정답: N' (N은 1~5 중 하나) 형식으로 정답 하나만 쓰세요."
+)
+
 # 해설 생성용 시스템 프롬프트. 정답을 알려준 상태에서 '왜 그 답인지'를 서술하게 하여
 # 모델이 스스로 푸는 것보다 사실 오류 가능성을 낮춘다.
 EXPLANATION_SYSTEM_PROMPT = (
@@ -157,6 +164,12 @@ EVAL_MAX_TOKENS_REASONING = 2048
 # 로컬(Ollama) 모델은 '번호만' 지시를 무시하고 설명을 덧붙이는 경우가 있어 약간 넉넉히 준다.
 # (parse_answer 가 '정답: N' 또는 마지막 숫자를 견고하게 추출한다.)
 EVAL_MAX_TOKENS_LOCAL = 512
+# CoT(근거 서술)는 출력이 길어 더 넉넉히.
+EVAL_MAX_TOKENS_COT = 640
+
+# Track A — self-consistency: 같은 문제를 N회(temp>0) 샘플해 다수결.
+EVAL_SC_SAMPLES = 5
+EVAL_SC_TEMPERATURE = 0.7
 # 추론형 모델의 추론 강도(비용/지연 절감). 지원하지 않는 모델이면 자동 무시되도록 예외 처리.
 EVAL_REASONING_EFFORT = "low"
 

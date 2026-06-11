@@ -17,6 +17,7 @@
     python training/evaluate.py --no-rag        # RAG 변형 제외(순수 base 비교)
     python training/evaluate.py --rag-local     # 한국형에도 RAG 적용
     python training/evaluate.py --models ft:gpt-4o-...:hani-term   # 글로벌에 파인튜닝 모델 추가
+    python training/evaluate.py --vote 3 --rag-local    # 환각 완화: 3회 생성·2회 합의 시만 인정
 """
 from __future__ import annotations
 import argparse
@@ -153,11 +154,14 @@ def _chat_once(client, model_id: str, provider: str, messages: list,
 
 
 def ask(model_id: str, provider: str, row: dict, rag: bool = False,
-        index: TermIndex | None = None, cot: bool = False, sc_n: int = 1) -> int | None:
+        index: TermIndex | None = None, cot: bool = False, sc_n: int = 1,
+        sc_min: int = 0) -> int | None:
     """한 문항을 물어 정답 번호(1~5)를 받아 파싱.
 
-    - cot : 근거 서술 후 '정답: N' (출력 토큰 예산 ↑)
-    - sc_n: >1 이면 temp>0 으로 sc_n 회 샘플 후 다수결(self-consistency)
+    - cot   : 근거 서술 후 '정답: N' (출력 토큰 예산 ↑)
+    - sc_n  : >1 이면 temp>0 으로 sc_n 회 샘플 후 다수결(self-consistency)
+    - sc_min: >0 이면 최다 득표가 sc_min 표 미만일 때 기권(None) — 환각 완화.
+              예) sc_n=3, sc_min=2 → 3회 생성 중 2회 이상 일치해야 정답 인정.
     """
     client = get_client(provider)
     messages = [
@@ -178,7 +182,13 @@ def ask(model_id: str, provider: str, row: dict, rag: bool = False,
                                         max_out, EVAL_SC_TEMPERATURE))
             if a is not None:
                 votes.append(a)
-        return Counter(votes).most_common(1)[0][0] if votes else None
+        if not votes:
+            return None
+        top, cnt = Counter(votes).most_common(1)[0]
+        # 환각 완화: 합의(sc_min 표) 미달이면 기권 — 불확실할 때 찍지 않는다.
+        if sc_min and cnt < sc_min:
+            return None
+        return top
     return parse_answer(_chat_once(client, model_id, provider, messages, max_out, 0))
 
 
@@ -186,7 +196,8 @@ def evaluate_model(target: dict, rows: list[dict], index: TermIndex | None = Non
     mid, provider = target["id"], target["provider"]
     role, rag = target["role"], target.get("rag", False)
     cot, sc_n = target.get("cot", False), target.get("sc", 1)
-    variant = target.get("variant") or variant_of(mid, rag, cot, sc_n)
+    sc_min = target.get("sc_min", 0)
+    variant = target.get("variant") or variant_of(mid, rag, cot, sc_n, sc_min)
     tag = f"{role}/{variant}"
     print(f"\n=== 평가: {mid} [{provider}] ({tag}, {len(rows)}문항) ===")
     correct = 0
@@ -197,7 +208,7 @@ def evaluate_model(target: dict, rows: list[dict], index: TermIndex | None = Non
         idx, row = idx_row
         for attempt in range(3):
             try:
-                pred = ask(mid, provider, row, rag, index, cot, sc_n)
+                pred = ask(mid, provider, row, rag, index, cot, sc_n, sc_min)
                 return idx, pred, None
             except Exception as e:  # noqa: BLE001
                 if attempt == 2:
@@ -230,33 +241,39 @@ def evaluate_model(target: dict, rows: list[dict], index: TermIndex | None = Non
     no_answer = sum(1 for d in details if d["pred"] is None and not d["error"])
     errored = sum(1 for d in details if d["error"])
     if no_answer or errored:
-        print(f"  ⚠ 미응답/파싱실패 {no_answer} · 호출오류 {errored} (오답으로 집계됨)")
+        label = "기권(합의미달)/미응답" if sc_min else "미응답/파싱실패"
+        print(f"  ⚠ {label} {no_answer} · 호출오류 {errored} (오답으로 집계됨)")
     return {
         "model": mid, "provider": provider, "role": role, "rag": rag,
-        "variant": variant,
+        "variant": variant, "cot": cot, "sc": sc_n, "sc_min": sc_min,
         "n": len(rows), "correct": correct, "accuracy": round(acc, 4),
         "no_answer": no_answer, "errored": errored,
         "by_subject": subj_acc, "details": details,
     }
 
 
-def variant_of(model_id: str, rag: bool = False, cot: bool = False, sc: int = 1) -> str:
-    """방식 라벨. 예: base / rag / cot / cot+sc5 / rag+cot+sc5 / ft."""
+def variant_of(model_id: str, rag: bool = False, cot: bool = False, sc: int = 1,
+               sc_min: int = 0) -> str:
+    """방식 라벨. 예: base / rag / cot / cot+sc5 / vote3 / rag+vote3 / ft.
+
+    vote{N} = N회 생성 후 과반(sc_min표) 이상 일치 시만 인정(미달 시 기권) — 환각 완화.
+    sc{N}   = N회 생성 후 단순 다수결(기권 없음).
+    """
     parts = []
     if rag:
         parts.append("rag")
     if cot:
         parts.append("cot")
     if sc and sc > 1:
-        parts.append(f"sc{sc}")
+        parts.append(f"vote{sc}" if sc_min else f"sc{sc}")
     if not parts:
         return "ft" if str(model_id).startswith("ft:") else "base"
     return "+".join(parts)
 
 
-def _spec(m, prov, role, rag=False, cot=False, sc=1):
+def _spec(m, prov, role, rag=False, cot=False, sc=1, sc_min=0):
     return {"id": m, "provider": prov, "role": role, "rag": rag, "cot": cot, "sc": sc,
-            "variant": variant_of(m, rag, cot, sc)}
+            "sc_min": sc_min, "variant": variant_of(m, rag, cot, sc, sc_min)}
 
 
 def resolve_targets(args) -> list[dict]:
@@ -269,6 +286,9 @@ def resolve_targets(args) -> list[dict]:
     use_cot = getattr(args, "cot", False)
     local_cot = getattr(args, "local_cot", False)
     rag_cot = getattr(args, "rag_cot", False)
+    # 환각 완화: N회 생성 → 과반 이상 일치 시만 인정(미달 시 기권). 예) 3회 → 2표 이상.
+    vote_n = getattr(args, "vote", 0) or 0
+    vote_min = (vote_n // 2 + 1) if vote_n > 1 else 0
 
     # 한국형(로컬) — base(+옵션 변형)
     if not args.no_local:
@@ -278,6 +298,12 @@ def resolve_targets(args) -> list[dict]:
             targets.append(_spec(m, PROVIDER_LOCAL, ROLE_KOREAN))
             if args.rag and args.rag_local:
                 targets.append(_spec(m, PROVIDER_LOCAL, ROLE_KOREAN, rag=True))
+            if vote_n > 1:
+                targets.append(_spec(m, PROVIDER_LOCAL, ROLE_KOREAN,
+                                     sc=vote_n, sc_min=vote_min))
+                if args.rag and args.rag_local:
+                    targets.append(_spec(m, PROVIDER_LOCAL, ROLE_KOREAN, rag=True,
+                                         sc=vote_n, sc_min=vote_min))
             if local_cot:
                 if use_cot:
                     targets.append(_spec(m, PROVIDER_LOCAL, ROLE_KOREAN, cot=True))
@@ -302,6 +328,11 @@ def resolve_targets(args) -> list[dict]:
                 continue  # 파인튜닝 모델엔 추가 방식 변형을 만들지 않음
             if args.rag:
                 targets.append(_spec(m, prov, ROLE_GLOBAL, rag=True))
+            if vote_n > 1:
+                targets.append(_spec(m, prov, ROLE_GLOBAL, sc=vote_n, sc_min=vote_min))
+                if args.rag:
+                    targets.append(_spec(m, prov, ROLE_GLOBAL, rag=True,
+                                         sc=vote_n, sc_min=vote_min))
             if use_cot:
                 targets.append(_spec(m, prov, ROLE_GLOBAL, cot=True))
             if sc_n > 1:
@@ -311,7 +342,7 @@ def resolve_targets(args) -> list[dict]:
 
     seen, out = set(), []
     for t in targets:
-        key = (t["id"], t["provider"], t["rag"], t["cot"], t["sc"])
+        key = (t["id"], t["provider"], t["rag"], t["cot"], t["sc"], t.get("sc_min", 0))
         if key not in seen:
             seen.add(key)
             out.append(t)
@@ -399,10 +430,16 @@ def main() -> None:
     ap.add_argument("--sc", type=int, default=1, help="self-consistency 샘플 수(>1이면 CoT+SC 변형)")
     ap.add_argument("--rag-cot", action="store_true", help="RAG+CoT+SC 결합 변형 추가")
     ap.add_argument("--local-cot", action="store_true", help="한국형에도 CoT/SC 적용")
+    ap.add_argument("--vote", type=int, default=0,
+                    help="환각 완화: 문항당 N회 생성, 과반 이상 일치 시만 인정(미달 시 기권). "
+                         "한국형·글로벌 모두 적용. 예) --vote 3 → 2표 이상")
+    ap.add_argument("--limit", type=int, default=0, help="평가 문항 수 제한(스모크 테스트용)")
     ap.set_defaults(rag=True)
     args = ap.parse_args()
 
     rows = select_eval_rows(args.all)
+    if args.limit:
+        rows = rows[: args.limit]
     targets = resolve_targets(args)
 
     # RAG 변형이 하나라도 있으면 용어 인덱스를 빌드. 비어있으면 RAG 변형 제외.

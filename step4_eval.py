@@ -1,8 +1,8 @@
 """
 step4_eval.py — 국가고시 문제집으로 세 가지 방식 정답률 비교.
   - 그냥 LLM  : 전부 근거 없이
-  - 항상 RAG  : 전부 그래프+벡터 근거 검색
-  - 라우팅    : 처방 선택형만 RAG, 나머지는 그냥 LLM
+  - 벡터 RAG  : Chroma 벡터 검색만
+  - GraphRAG  : 그래프+벡터 근거 검색
 사용:  python step4_eval.py --n 50
 """
 import os, sys, json, re, random, argparse
@@ -39,6 +39,10 @@ def parse_choice(text):
     m = re.search(r'[1-5]', text or "")
     return int(m.group()) if m else -1
 
+def vector_rag_answer(question, opts):
+    ctx = build_context([], vector_retrieve(question, k=5))
+    return parse_choice(call_llm(RAG_PROMPT.format(ctx=ctx, q=question, opts=opts)))
+
 def rag_answer(question, opts):
     seeds, _ = extract_seeds(question)
     ctx = build_context(graph_retrieve(seeds), vector_retrieve(question, k=5))
@@ -46,16 +50,21 @@ def rag_answer(question, opts):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--n", type=int, default=30)
+    ap.add_argument("--n", type=int, default=0, help="문제 수 제한 (0=전체)")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--rx-only", action="store_true", help="처방 선택형 문제만 실행")
     args = ap.parse_args()
 
     Q = [json.loads(l) for l in open(QFILE, encoding="utf-8")]
+    if args.rx_only:
+        Q = [q for q in Q if RX_PRESCRIPTION.search(q["question"])]
+        print(f"처방 선택형 문제: {len(Q)}개")
     random.seed(args.seed); random.shuffle(Q)
-    Q = Q[:args.n]
+    if args.n:
+        Q = Q[:args.n]
 
-    base_ok = rag_ok = route_ok = 0
-    rx_base_ok = rx_rag_ok = rx_total = 0
+    base_ok = vec_ok = rag_ok = 0
+    rx_base_ok = rx_vec_ok = rx_rag_ok = rx_total = 0
 
     for i, q in enumerate(Q, 1):
         opts = fmt_opts(q["options"])
@@ -63,32 +72,34 @@ def main():
         is_rx = bool(RX_PRESCRIPTION.search(q["question"]))
 
         b = parse_choice(call_llm(BASE_PROMPT.format(q=q["question"], opts=opts)))
+        v = vector_rag_answer(q["question"], opts)
         r = rag_answer(q["question"], opts)
-        route = r if is_rx else b
 
-        base_ok  += (b     == gold)
-        rag_ok   += (r     == gold)
-        route_ok += (route == gold)
+        base_ok += (b == gold)
+        vec_ok  += (v == gold)
+        rag_ok  += (r == gold)
 
         if is_rx:
             rx_total += 1
             rx_base_ok += (b == gold)
+            rx_vec_ok  += (v == gold)
             rx_rag_ok  += (r == gold)
 
         tag = "[처방형]" if is_rx else "        "
-        print(f"[{i:3}/{len(Q)}] {tag} 정답 {gold} | 그냥={b} RAG={r} 라우팅={route}")
+        print(f"[{i:3}/{len(Q)}] {tag} 정답 {gold} | 그냥={b} 벡터RAG={v} GraphRAG={r}")
 
     n = len(Q)
     print("\n===== 전체 결과 =====")
     print(f"그냥 LLM   : {base_ok}/{n}  ({base_ok/n*100:.1f}%)")
-    print(f"항상 RAG   : {rag_ok}/{n}  ({rag_ok/n*100:.1f}%)")
-    print(f"라우팅     : {route_ok}/{n}  ({route_ok/n*100:.1f}%)")
+    print(f"벡터 RAG   : {vec_ok}/{n}  ({vec_ok/n*100:.1f}%)")
+    print(f"GraphRAG   : {rag_ok}/{n}  ({rag_ok/n*100:.1f}%)")
 
-    if rx_total:
+    if rx_total and not args.rx_only:
         print(f"\n===== 처방 선택형 부분집합 ({rx_total}문제) =====")
         print(f"그냥 LLM   : {rx_base_ok}/{rx_total}  ({rx_base_ok/rx_total*100:.1f}%)")
-        print(f"항상 RAG   : {rx_rag_ok}/{rx_total}  ({rx_rag_ok/rx_total*100:.1f}%)")
-    else:
+        print(f"벡터 RAG   : {rx_vec_ok}/{rx_total}  ({rx_vec_ok/rx_total*100:.1f}%)")
+        print(f"GraphRAG   : {rx_rag_ok}/{rx_total}  ({rx_rag_ok/rx_total*100:.1f}%)")
+    elif not rx_total and not args.rx_only:
         print("\n(처방 선택형 문제 없음 — 더 많은 문제로 실행하세요)")
 
 if __name__ == "__main__":

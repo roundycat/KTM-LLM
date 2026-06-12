@@ -80,7 +80,7 @@ k_llm/
 
 **검색 경로 (GraphRAG):**
 ```
-질문 텍스트 → 증상/변증 노드 매칭(seeds)
+질문 텍스트 → LLM이 한의학 증상 용어 추출(seeds)
            → Neo4j: 처방 -[주치]→ seeds 역방향 검색
            → 부합 증상 수 기준 처방 후보 상위 6개
            → 각 처방의 구성 약재 함께 조회
@@ -88,16 +88,19 @@ k_llm/
 
 ### 벡터 검색용 청크
 
-| 컬렉션 | 파일 | 청크 수 | 내용 |
-|--------|------|---------|------|
-| `hani_rx` | 처방_rag_chunks.jsonl | 3,094 | 처방별 주치·구성·출전 본문 |
-| `hani_term` | 한의학용어_rag_chunks.jsonl | 9,074 | 한의학 용어 정의 본문 |
+| 컬렉션 | 파일 | 청크 수 | 내용 | 용도 |
+|--------|------|---------|------|------|
+| `hani_rx` | 처방_rag_chunks.jsonl | 3,094 | 처방별 주치·구성·출전 본문 | GraphRAG 벡터 보조 |
+| `hani_rx_clinical` | 처방_rag_chunks_clinical.jsonl | 2,213 | LLM이 재작성한 임상 표현 본문 | 벡터 RAG |
+| `hani_term` | 한의학용어_rag_chunks.jsonl | 9,074 | 한의학 용어 정의 본문 | 용어 질문 |
+
+- **GraphRAG**는 `hani_rx`(원본)를 사용 — 그래프 근거가 주도하고 벡터가 보조
+- **벡터 RAG**는 `hani_rx_clinical`(임상 표현)을 사용 — 시험 문제 문체와 유사도가 높음
+- 컬렉션을 분리한 이유: 임상 표현 청크를 GraphRAG에 섞으면 설득력 있는 틀린 근거가 포함돼 정답률이 떨어짐
 
 **처방 청크 메타데이터:** `처방명`, `처방한자`, `계통`, `주치증상[]`, `구성약재[]`, `출전`, `출처`, `페이지`
 
 **용어 청크 메타데이터:** `term`, `hanja`, `category`, `synonyms`, `source`
-
-컬렉션을 분리한 이유: 처방형 질문에 용어 청크가 섞이면 관련 없는 정의 본문이 근거로 포함되어 정답률이 떨어짐.
 
 ### 평가 데이터
 
@@ -106,25 +109,6 @@ k_llm/
 | 한의학_문제.jsonl | 한의사 국가고시 5지선다 | 517 |
 | 한의학_문제_원본.jsonl | 과목·그림 라벨 포함 원본 | 517 |
 | 처방_문제.jsonl | 처방 선택형만 추출 | 86 |
-
-**과목별 문제 수:**
-
-| 과목 | 문제 수 | 라우팅 경로 |
-|------|---------|------------|
-| 한의학 기초 | 110 | term |
-| 한약학 응용 | 110 | graph |
-| 내과학1 | 79 | graph |
-| 침구학 | 46 | term |
-| 내과학2 | 32 | graph |
-| 부인과학 | 32 | graph |
-| 보건의약 관계 법규 | 30+20 | plain |
-| 소아과학 | 25 | graph |
-| 예방의학 | 23 | plain |
-| 외과학 | 16 | graph |
-| 신경정신과학 | 16 | graph |
-| 안이비인후과학 | 16 | graph |
-| 한방생리학 | 16 | term |
-| 본초학 | 16 | graph |
 
 ---
 
@@ -180,8 +164,8 @@ Chroma 컬렉션 생성 시 `{"hnsw:space": "cosine"}`으로 코사인 공간을
 ### 벡터 DB — Chroma
 
 `chromadb.PersistentClient`로 `./chroma_db/` 디렉토리에 영구 저장합니다.
-컬렉션은 `hani_rx`(처방)와 `hani_term`(용어) 두 개로 분리해
-라우팅 경로에 따라 다른 컬렉션을 조회합니다.
+컬렉션은 `hani_rx`(처방 원본), `hani_rx_clinical`(처방 임상), `hani_term`(용어) 세 개로 분리해
+방식에 따라 다른 컬렉션을 조회합니다.
 
 ---
 
@@ -209,7 +193,7 @@ python step1_load_neo4j.py
 
 - 임베딩 모델: `BAAI/bge-m3` (첫 실행 시 자동 다운로드 ~2GB)
 - 저장 경로: `./chroma_db/`
-- 컬렉션: `hani_rx` (3,094건), `hani_term` (9,074건)
+- 컬렉션: `hani_rx` (3,094건), `hani_rx_clinical` (2,213건), `hani_term` (9,074건)
 - 청크 데이터를 수정하면 이 단계를 다시 실행해야 합니다 (수십 분 소요).
 
 ```bash
@@ -222,10 +206,20 @@ python step2_build_vectordb.py
 
 ```
 질문 텍스트
-  ① extract_seeds  — 증상·변증 노드명 직접 매칭 (or LLM 변환)
-  ② graph_retrieve — Neo4j Cypher: 처방 -[주치]→ seeds 역방향
-  ③ vector_retrieve — BGE-m3 임베딩 + Chroma 유사도 상위 k개
-  ④ call_llm       — 그래프+벡터 근거를 합쳐 LLM 답변 생성
+  ① extract_seeds_llm — LLM이 임상 표현을 한의학 용어로 번역 후 그래프 노드 매칭
+  ② graph_retrieve    — Neo4j Cypher: 처방 -[주치]→ seeds 역방향 탐색
+  ③ vector_retrieve   — BGE-m3 임베딩 + Chroma 유사도 상위 k개
+  ④ call_llm          — 그래프+벡터 근거를 합쳐 LLM 답변 생성
+```
+
+**① seed 추출 방식 — LLM 번역**
+
+시험 문제는 임상 표현("소화가 안 되고 구토")을 쓰지만 그래프 노드는 한의학 진단 용어("비기허약, 위기불화")로 등록되어 있어 직접 문자열 매칭이 불가능합니다. LLM이 먼저 임상 표현을 한의학 용어로 번역한 뒤 그래프 노드와 매칭합니다.
+
+```
+질문: "소화가 안 되고 가슴이 답답하며 구토"
+  → LLM 추출: "비기허약, 위기불화, 담음"
+  → 그래프 매칭: SY-비기허약 → 육군자탕 발견
 ```
 
 **LLM 선택:**
@@ -248,37 +242,16 @@ python step3_graphrag_query.py "가슴이 두근거리고 쉽게 피로해요"
 **주요 설계 결정:**
 - `STOP_NAMES = {"한다"}`: 종결어미 "~한다"가 증상 노드 "汗多(한다)"와 충돌하는 버그 방지
 - `temperature=0`: 재현 가능한 결과를 위해 모든 LLM 호출에 고정
-- `seen` 집합: 같은 노드 중복 매칭 방지
 
 ### Step 4 — 정답률 비교 평가 (`step4_eval.py`)
 
 3가지 방식을 동시에 실행해 정답률을 비교합니다.
 
-| 방식 | 설명 |
-|------|------|
-| 그냥 LLM | 근거 없이 LLM만 사용 |
-| 벡터 RAG | Chroma 벡터 검색 근거만 사용 |
-| GraphRAG | 그래프 + 벡터 검색 근거 사용 |
-| 라우팅 RAG | 과목/유형에 따라 3가지 중 자동 선택 |
-
-**과목 기반 라우팅:**
-
-```python
-ROUTE_BY_SUBJECT = {
-    "내과학1": "graph",  "내과학2": "graph",
-    "한약학 응용": "graph", "본초학": "graph",
-    "부인과학": "graph",  "소아과학": "graph",
-    "외과학": "graph",   "신경정신과학": "graph",
-    "안이비인후과학": "graph",
-    "침구학": "term",    "한방생리학": "term",
-    "한의학 기초": "term",
-    "예방의학": "plain",
-    "보건의약관계법규": "plain",
-}
-```
-
-- `graph` 과목이라도 법규 키워드(`「`, `법」상` 등) 포함 시 → `plain`으로 강등
-- 과목 미상이면 키워드 휴리스틱으로 경로 판단
+| 방식 | 설명 | 컬렉션 |
+|------|------|--------|
+| 그냥 LLM | 근거 없이 LLM만 사용 | — |
+| 벡터 RAG | Chroma 벡터 검색 근거만 사용 | `hani_rx_clinical` |
+| GraphRAG | LLM seed 추출 + 그래프 + 벡터 검색 | `hani_rx` |
 
 **주요 옵션:**
 
@@ -288,13 +261,12 @@ python step4_eval.py --n 50 --seed 42      # 50개 샘플, 시드 고정
 python step4_eval.py --rx-only             # 처방형 86문제만
 python step4_eval.py --rx-only --k 10      # 벡터 청크 수 10개
 python step4_eval.py --skip-figure         # 그림 문제 제외
-python step4_eval.py --source 한의학_문제_원본.jsonl  # 과목 라벨 활성화
 ```
 
 **출력 지표:**
-- 과목별 / 라우팅 경로별 / 처방형 vs 그외 / 그림 유무별 정답률
+- 과목별 / 처방형 vs 그외 / 그림 유무별 정답률
 - `recall@ctx`: 처방형 문제에서 정답 처방명이 검색 근거에 포함된 비율
-- `diag_plain_ok_rag_fail.jsonl`: 그냥 LLM은 맞고 GraphRAG는 틀린 문제 진단 파일
+- `eval/diag_plain_ok_rag_fail.jsonl`: 그냥 LLM은 맞고 GraphRAG는 틀린 문제 진단 파일
 
 ---
 
@@ -364,25 +336,28 @@ export OPENAI_API_KEY=sk-...
 # 5. 질문 테스트
 python step3_graphrag_query.py "소화가 안되고 입맛이 없으며 기운이 없다"
 
-# 6. 정답률 평가
-python step4_eval.py --source 한의학_문제_원본.jsonl
+# 6. 정답률 평가 (처방형 86문제)
+python step4_eval.py --rx-only --k 5 --seed 42
 ```
 
 ---
 
-## 평가 결과 (참고)
+## 평가 결과
+
+처방형 문제 86개 기준 (`--rx-only --k 5 --seed 42`):
 
 | 방식 | 정답률 |
 |------|-------|
-| 그냥 LLM | 31.4% |
-| 벡터 RAG | 26.7% |
-| GraphRAG | 33.7% |
-| 라우팅 RAG | 33.7% |
+| 그냥 LLM | 27.9% |
+| 벡터 RAG | 29.1% |
+| GraphRAG | 31.4% |
 
-처방형 문제(86개) `recall@ctx` (정답 처방명이 검색 근거에 포함된 비율): 보강 전 4.7%
+- **벡터 RAG**: 임상 표현 청크(`hani_rx_clinical`) 사용
+- **GraphRAG**: LLM seed 추출 + Neo4j 그래프 탐색 + `hani_rx` 원본 청크
 
-현재 recall이 낮은 주된 이유: 시험 문제는 구어체 임상 증상("맥이 가늘고 약하다")을 기술하지만
-그래프 주치는 전문 한의학 용어("기허담성", "비신양허")로 등록되어 있어 직접 매칭이 어려움.
+`recall@ctx` (처방형 정답이 검색 근거에 포함된 비율): 약 4~5%
+
+recall이 낮은 주된 이유: 시험 문제는 구어체 임상 증상을 기술하지만 그래프 주치는 한의학 진단 용어로 등록되어 있어 LLM 번역을 거쳐도 정확한 매칭이 어려운 경우가 많음.
 
 ---
 
@@ -392,7 +367,7 @@ python step4_eval.py --source 한의학_문제_원본.jsonl
 |------|------|
 | Neo4j (로컬 Community), Chroma, BGE-m3 임베딩 | 무료 |
 | Ollama 로컬 LLM | 무료 |
-| OpenAI / Anthropic API | 호출당 소액 |
+| OpenAI / Anthropic API | 호출당 소액 (GraphRAG는 질문당 LLM 2회 호출) |
 
 ---
 

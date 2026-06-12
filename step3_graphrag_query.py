@@ -161,10 +161,7 @@ PROMPT = """당신은 한의학 지식베이스를 활용하는 보조 도우미
 {ctx}
 """
 def answer(question):
-    if os.environ.get("USE_LLM_EXTRACT"):
-        seeds, names = extract_seeds_llm(question)
-    else:
-        seeds, names = extract_seeds(question)
+    seeds, names = extract_seeds_llm(question)
     g = graph_retrieve(seeds)
     c = vector_retrieve(question, k=5)
     ctx = build_context(g, c)

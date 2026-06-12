@@ -63,6 +63,21 @@
 - 그림 문항(`has_figure=true`, 70개)은 이미지 의존이라 **평가·해설에서 제외**(텍스트만 517).
 - 정답(`answer`)은 **국시원 공식 정답표** 기준(전사 시 100% 검증).
 
+**3.1 데이터 추출 파이프라인** (`scripts/`, 상세 [README](README.md#-데이터-추출-파이프라인-scripts))
+국시원 PDF는 텍스트가 전부 **벡터(곡선)로 변환**(복사 방지)되어 일반 텍스트 추출이 불가 → **고해상도
+렌더 + 비전 전사**가 유일한 방법. A3 한 장 통째로는 작은 한자가 뭉개져 **2단 컬럼 타일링(장변 ≤1980px)**
+으로 가독성 확보. 사진·도표 문항은 국시원이 비공개 처리 → `[그림 생략]` 표기 후 제외.
+1. `discover.py` (게시물·첨부 탐색 → `manifest.json`) → 2. `fetch_render.py` (PDF 다운로드 + 페이지 PNG 렌더)
+→ 3. `tile_render.py` (2단 컬럼 타일) → 4. `transcribe_api.py` (비전 API 전사, 정답표 포함)
+→ 5. `assemble.py` (전사본 + 정답표 조인 → `dataset/*.jsonl`). 전사 원본은 `transcribe/`에 보존.
+- 품질: 587문항 **전부 정답 매칭·보기 5개**(정답누락 0). 비전 전사 특성상 일부 한자에 국소 오탈자 가능.
+
+**3.2 파인튜닝용 SFT 데이터 (준비 완료, 학습은 미실행)**
+`prepare_data.py`(기출 → chat 포맷, `--with-rationale`면 해설 CoT 타깃) 와 `prepare_terminology.py`
+(용어 → Q&A)가 `data/finetune_*.jsonl` **4종**(기출 train/val + 용어 train/val)을 생성한다. **시드 42로
+평가 검증셋과 동일 분할 → 데이터 누수 없음.** OpenAI SFT 실행 코드 `finetune.py`도 완비돼 있다. **다만
+파인튜닝 자체는 미실행**(9장 — OpenAI 2026 차단·유료, 로컬은 VRAM 8GB 한계). `data/`는 용량상 gitignore.
+
 ---
 
 ## 4. 사용한 모델 전부
@@ -262,5 +277,46 @@ python training/report.py     # → results/report.md
 2. 평가 실행 전 **Ollama 데몬이 D: 환경(`OLLAMA_MODELS=D:\ollama-models`)으로 떠 있는지** 확인(아니면 C: 폭발).
 3. GPU 에러 시 **모든 ollama 프로세스 종료 → 재기동** 후 1콜 테스트(`ollama ps`가 100% GPU·응답 비어있지 않은지).
 4. 핵심 코드: `training/evaluate.py`(평가·전 방식), `training/rag.py`(용어 주입), `training/config.py`(설정·프롬프트).
-5. 상세 로그/이력: [EXPERIMENTS.md](EXPERIMENTS.md). 결과 JSON: `results/`.
+5. 상세 로그/이력: [EXPERIMENTS.md](EXPERIMENTS.md). 저장소 사용법·추출: [README.md](README.md). 결과 JSON: `results/`.
 6. 저장소(PR): https://github.com/roundycat/KTM-LLM/pull/1
+
+---
+
+## 13. 부록 A — 코드/모듈 인벤토리 (무엇이 무엇을 하나)
+
+| 파일 | 역할 |
+|---|---|
+| `training/config.py` | 경로·모델ID·**프롬프트·하이퍼파라미터**·로컬/글로벌 클라이언트(`make_client`) 중앙 관리 |
+| `training/evaluate.py` | 채점 본체. 방식: base·rag·cot·sc·**vote**. 옵션 `--all/--cot --sc N/--vote N/--rag-local/--local-models/--limit` |
+| `training/rag.py` | KIOM 용어 인덱스 → 문제 등장 용어 검색·주입(한자 우선, 무료·결정론적) |
+| `training/report.py` | `results/` 종합 → 로컬 vs 글로벌·용어주입 전후 리포트(`results/report.md`) |
+| `training/run_all.py` | 실험 순서 ①②③④ 오케스트레이터 |
+| `training/prepare_data.py` | 기출 → OpenAI chat 포맷 + train/val 분할(`--with-rationale`=해설 CoT) |
+| `training/prepare_terminology.py` | KIOM 용어 → Q&A SFT 변환(파인튜닝용) |
+| `training/add_explanations.py` | (원래의) 해설 생성 스크립트 — 단, 본 프로젝트 517 해설은 Claude Opus 워크플로로 생성(7장) |
+| `training/finetune.py` | OpenAI 파일 업로드 → FT job 생성·모니터링(미실행) |
+| `scripts/fetch_terminology.py` | KIOM 표준한의학용어집 수집 → `dataset/한의학_용어.jsonl` |
+| `scripts/discover·fetch_render·tile_render·transcribe_api·assemble.py` | **데이터 추출 파이프라인**(3.1) |
+| `scripts/verify_explanations_*` | **해설 의학정확성 검증 하니스**(워크플로 JS + 배치 생성 + 교정 적용) |
+
+## 14. 부록 B — 정확한 프롬프트 (전부 `training/config.py`에 정의, 원문 그대로)
+
+- **풀이 시스템 프롬프트** `SYSTEM_PROMPT`: "당신은 한의사·한약사 국가시험 문제를 푸는 한의학 전문가입니다. 주어진 5지선다 문제를 읽고 정답을 고르세요."
+- **정답 지시(base)** `ANSWER_INSTRUCTION`: "정답 번호(1~5) 하나만 숫자로 출력하세요. 설명은 하지 마세요."
+- **CoT 지시** `COT_ANSWER_INSTRUCTION`: "먼저 핵심 근거를 2~3문장으로 간단히 쓰고, 마지막 줄에 반드시 '정답: N'(N은 1~5) 형식으로 정답 하나만 쓰세요."
+- **RAG 주입 헤더(환각완화 폴백)** `RAG_INJECT_HEADER`: "[참고] 아래는 문제와 관련될 수 있는 한의학 표준 용어 정의입니다. 이 자료에 근거해 풀되, 자료가 문제 풀이에 충분하지 않으면 당신이 알고 있는 한의학 지식을 활용해 답하세요."
+- **해설 생성 시스템 프롬프트** `EXPLANATION_SYSTEM_PROMPT`: "당신은 한의학 교수입니다. … 정답이 왜 옳은지 핵심 근거를 설명하고, 헷갈리기 쉬운 오답이 왜 틀렸는지 간단히 짚어 주세요. 한국어로 3~5문장 … 정답 번호를 바꾸려 하지 마세요." (단, 본 프로젝트 실제 517 해설은 동일 취지로 **Claude Opus 워크플로**가 생성 — 7장)
+- **해설 검증 프롬프트**: `scripts/verify_explanations_workflow.js`의 `verifyPrompt`(1차 적대 검증)·`confirmPrompt`(2차 독립 재검증)에 원문 포함.
+
+## 15. 부록 C — 하이퍼파라미터 (재현 핵심)
+
+| 항목 | 값 | 비고 |
+|---|---|---|
+| 분할 시드 / 검증 비율 | **42** / 0.1 | 검증셋 51문항. 학습·평가 동일 분할(누수 없음) |
+| base·RAG 디코딩 | **temperature 0 (greedy)** | 결정론적 |
+| self-consistency(SC) | **5회 / temp 0.7 / 다수결**(항상 응답) | `EVAL_SC_SAMPLES=5` |
+| vote3(환각완화) | **3회 / temp 0.7 / 2회 이상 합의 시만 인정, 미달 기권** | `--vote 3` |
+| RAG 주입 상위 K / 최소 용어 길이 | **6** / 2글자 | 한자 우선 매칭 |
+| 출력 토큰: base / 로컬 / CoT / 추론형 | 16 / **512** / 640 / 2048 | 로컬은 설명 덧붙여 넉넉히 |
+| 평가 동시 요청 / 타임아웃 / 재시도 | 8 / 60초 / 3회 | `EVAL_CONCURRENCY=8` |
+| 엔드포인트 | `localhost:11434/v1` (Ollama, OpenAI 호환) | api_key 더미 |

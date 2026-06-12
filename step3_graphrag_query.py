@@ -18,15 +18,21 @@ NEO4J = (os.environ.get("NEO4J_URI", "bolt://localhost:7687"),
          os.environ.get("NEO4J_USER", "neo4j"),
          os.environ.get("NEO4J_PW", "neo4j"))
 EMB_MODEL = "BAAI/bge-m3"
-DB_PATH, COLL = "./chroma_db", "hani"
+DB_PATH = "./chroma_db"
+COLL_RX          = "hani_rx"           # 처방 청크 (원본 — GraphRAG용)
+COLL_RX_CLINICAL = "hani_rx_clinical"  # 임상 설명 청크 (벡터 RAG용)
+COLL_TERM        = "hani_term"         # 용어 청크
 
 # ---------- 공통 리소스 ----------
 @functools.lru_cache(maxsize=1)
 def emb_model(): return SentenceTransformer(EMB_MODEL)
 
 @functools.lru_cache(maxsize=1)
-def chroma():
-    return chromadb.PersistentClient(path=DB_PATH).get_collection(COLL)
+def _chroma_client():
+    return chromadb.PersistentClient(path=DB_PATH)
+
+def chroma(coll=COLL_RX):
+    return _chroma_client().get_collection(coll)
 
 @functools.lru_cache(maxsize=1)
 def driver(): return GraphDatabase.driver(NEO4J[0], auth=(NEO4J[1], NEO4J[2]))
@@ -35,19 +41,25 @@ def driver(): return GraphDatabase.driver(NEO4J[0], auth=(NEO4J[1], NEO4J[2]))
 def name_index():
     """질문에서 증상/변증명을 찾기 위한 이름→id 사전."""
     idx = []
-    for l in open("kg_all_nodes.jsonl", encoding="utf-8"):
+    for l in open("data/kg_all_nodes.jsonl", encoding="utf-8"):
         n = json.loads(l)
         if n["type"] in ("증상", "변증") and len(n.get("name_ko", "")) >= 2:
             idx.append((n["name_ko"], n["id"]))
     return idx
 
+# 한국어 종결어미·일반어와 충돌하는 증상 표면형 — 매칭에서 제외
+STOP_NAMES = {"한다"}   # SY-0410 汗多: '한다'가 종결어미 '~한다'와 충돌
+
 # ---------- (1) 증상/변증 추출 ----------
 def extract_seeds(question):
     """질문 텍스트에서 그래프 노드 이름과 직접 매칭 (한의학 시험 문어체에 적합)."""
     seeds, names = [], []
+    seen = set()
     for nm, nid in name_index():
-        if nm in question:
-            seeds.append(nid); names.append(nm)
+        if nm in STOP_NAMES:
+            continue
+        if nm in question and nid not in seen:
+            seeds.append(nid); names.append(nm); seen.add(nid)
     return seeds, names
 
 EXTRACT_PROMPT = """다음 질문에서 한의학 증상·병증·변증에 해당하는 용어를 추출하세요.
@@ -91,9 +103,9 @@ def graph_retrieve(seeds):
         return [r.data() for r in s.run(GRAPH_Q, seeds=seeds)]
 
 # ---------- (3) 본문(벡터) 검색 ----------
-def vector_retrieve(question, k=5):
+def vector_retrieve(question, k=5, coll=COLL_RX):
     q = emb_model().encode([question], normalize_embeddings=True).tolist()
-    res = chroma().query(query_embeddings=q, n_results=k)
+    res = chroma(coll).query(query_embeddings=q, n_results=k)
     return list(zip(res["ids"][0], res["documents"][0]))
 
 # ---------- (4) LLM 호출 ----------
@@ -103,19 +115,21 @@ def call_llm(prompt):
         import anthropic
         m = os.environ.get("LLM_MODEL", "claude-sonnet-4-6")
         r = anthropic.Anthropic().messages.create(
-            model=m, max_tokens=900, messages=[{"role": "user", "content": prompt}])
+            model=m, max_tokens=900, temperature=0,
+            messages=[{"role": "user", "content": prompt}])
         return r.content[0].text
     if prov == "openai":
         from openai import OpenAI
         m = os.environ.get("LLM_MODEL", "gpt-4o-mini")
         r = OpenAI().chat.completions.create(
-            model=m, messages=[{"role": "user", "content": prompt}])
+            model=m, temperature=0, messages=[{"role": "user", "content": prompt}])
         return r.choices[0].message.content
     # 기본: Ollama (로컬·무료)
     import requests
     m = os.environ.get("LLM_MODEL", "qwen2.5")
     r = requests.post("http://localhost:11434/api/generate",
-                      json={"model": m, "prompt": prompt, "stream": False}, timeout=180)
+                      json={"model": m, "prompt": prompt, "stream": False,
+                            "options": {"temperature": 0}}, timeout=180)
     return r.json().get("response", "")
 
 # ---------- 근거 조립 + 답변 ----------

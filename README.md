@@ -1,70 +1,201 @@
 # 한의학 GraphRAG
 
-환자의 증상 설명을 입력하면 지식 그래프(Neo4j)와 벡터 검색(Chroma)을 함께 활용해
+환자 증상을 입력하면 지식 그래프(Neo4j)와 벡터 검색(Chroma)을 결합해
 LLM이 처방 후보와 근거를 제시하는 시스템입니다.
+한의사 국가고시 517문제로 그냥 LLM / 벡터 RAG / GraphRAG 정답률을 비교 평가합니다.
+
+---
+
+## 파일 구성
+
+```
+k_llm/
+├── data/
+│   ├── kg_all_nodes.jsonl              # 지식 그래프 노드 (7,692개)
+│   ├── kg_all_edges.jsonl              # 지식 그래프 엣지 (~40,000개)
+│   ├── 처방_rag_chunks.jsonl            # 처방 벡터 청크 원본 (3,094개)
+│   ├── 처방_rag_chunks_clinical.jsonl   # 처방 임상 표현 청크 (2,213개)
+│   └── 한의학용어_rag_chunks.jsonl       # 한의학 용어 벡터 청크 (9,074개)
+├── eval/
+│   ├── 한의학_문제.jsonl                 # 국가고시 5지선다 517문제
+│   ├── 한의학_문제_원본.jsonl             # 과목·그림 라벨 포함 원본
+│   ├── 처방_문제.jsonl                   # 처방형 문제 86개 (별도 추출)
+│   ├── diag_plain_ok_rag_fail.jsonl     # 진단 파일 (LLM정답·GraphRAG오답)
+│   └── experiment.txt                   # 실험 결과 기록
+├── step1_load_neo4j.py         # 그래프 → Neo4j 적재
+├── step2_build_vectordb.py     # 청크 → Chroma 임베딩
+├── step3_graphrag_query.py     # GraphRAG 쿼리 엔진
+├── step4_eval.py               # 정답률 비교 평가
+├── enrich_주치.py              # 주치 엣지 보강 (청크 메타 → 그래프)
+├── rewrite_chunks.py           # 처방 청크 임상 표현 재작성
+└── requirements.txt
+```
 
 ---
 
 ## 데이터 구성
 
-### 지식 그래프 (`kg_all_nodes.jsonl`, `kg_all_edges.jsonl`)
+### 지식 그래프 노드 (총 7,692개)
 
-| 노드 | 설명 | 개수 |
+| 타입 | 설명 | 개수 |
 |------|------|------|
-| 처방 | 한약 처방 (구성·출전·계통) | 3,094 |
-| 약재 | 구성 약재 (귀경·성·미·분류) | 645 |
-| 증상 | 처방의 주치 적응증 | 3,873 |
-| 변증 | 팔강 8증 (음·양·표·리·한·열·허·실) | 8 |
-| 증상지표 | 환자 말투에 가까운 팔강변증 설문 문항 | 54 |
+| 처방 | 한약 처방 (구성·출전·계통·한자명) | 3,094 |
+| 증상 | 처방의 주치 적응증·병증 | 3,873 |
+| 약재 | 처방 구성 약재 (귀경·성·미·분류) | 645 |
+| 증상지표 | 팔강변증 설문 문항 (구어체) | 54 |
 | 장부 | 귀경 대상 장기 | 13 |
+| 변증 | 팔강 8증 (음·양·표·리·한·열·허·실) | 8 |
 | 계통 | 오장 내과 계통 | 5 |
 
-| 엣지 | 의미 | 개수 |
-|------|------|------|
-| 구성 | 처방 → 약재 | 25,565 |
-| 주치 | 처방 → 증상/변증 | 8,509 |
-| 지표 | 증상지표 → 변증 | 54 |
-| 귀경 | 약재 → 장부 | 972 |
-| 계통 | 처방 → 오장 계통 | 3,094 |
+**처방 노드 주요 필드:** `id`, `name_ko`, `name_hanja`, `계통`, `출전`
 
-**추론 경로:**
-```
-환자 증상 → 변증 → 적응 변증 → 처방 → 약재 → 장부
-```
-예: "쉽게 피로해진다" → 허증 → 신허(腎虛) → 가미사육탕 → 숙지황·산약·산수유
+**약재 노드 주요 필드:** `id`, `name_ko`, `name_hanja`, `성(性)`, `미(味)`, `귀경`, `분류`
 
-### 벡터 검색용 본문
-- `처방_rag_chunks.jsonl` — 처방별 자기완결 본문 3,094개
-- `한의학용어_rag_chunks.jsonl` — 용어 정의 본문 5,878개
+**변증 노드 주요 필드:** `id`, `name_ko`, `팔강축`, `정의`
+
+### 지식 그래프 엣지 (총 39,996개)
+
+| 타입 | 의미 | 수 |
+|------|------|----|
+| 구성 | 처방 → 약재 (처방 구성 약재) | 25,565 |
+| 주치 | 처방 → 증상/변증 (적응 증상) | 8,858 |
+| 계통 | 처방 → 계통 (오장 분류) | 3,094 |
+| 팔강귀속 | 증상 → 변증 (팔강 분류) | 1,447 |
+| 귀경 | 약재 → 장부 (약재 작용 부위) | 972 |
+| 지표 | 증상지표 → 변증 (설문→변증 매핑) | 54 |
+| 포함 | 변증 → 변증 (상위 개념 포함) | 6 |
+
+### 그래프 연결 구조
+
+```
+[증상지표] ──지표──▶ [변증]
+                        │
+[증상] ──팔강귀속──▶ [변증]
+  ▲
+  │ 주치
+[처방] ──구성──▶ [약재] ──귀경──▶ [장부]
+  │
+  └──계통──▶ [계통]
+```
+
+**검색 경로 (GraphRAG):**
+```
+질문 텍스트 → 증상/변증 노드 매칭(seeds)
+           → Neo4j: 처방 -[주치]→ seeds 역방향 검색
+           → 부합 증상 수 기준 처방 후보 상위 6개
+           → 각 처방의 구성 약재 함께 조회
+```
+
+### 벡터 검색용 청크
+
+| 컬렉션 | 파일 | 청크 수 | 내용 |
+|--------|------|---------|------|
+| `hani_rx` | 처방_rag_chunks.jsonl | 3,094 | 처방별 주치·구성·출전 본문 |
+| `hani_term` | 한의학용어_rag_chunks.jsonl | 9,074 | 한의학 용어 정의 본문 |
+
+**처방 청크 메타데이터:** `처방명`, `처방한자`, `계통`, `주치증상[]`, `구성약재[]`, `출전`, `출처`, `페이지`
+
+**용어 청크 메타데이터:** `term`, `hanja`, `category`, `synonyms`, `source`
+
+컬렉션을 분리한 이유: 처방형 질문에 용어 청크가 섞이면 관련 없는 정의 본문이 근거로 포함되어 정답률이 떨어짐.
 
 ### 평가 데이터
-- `한의학_문제.jsonl` — 한의사 국가고시 5지선다 517문제
-- `처방_문제.jsonl` — 그 중 처방형 문제 86개만 추출
+
+| 파일 | 설명 | 수 |
+|------|------|----|
+| 한의학_문제.jsonl | 한의사 국가고시 5지선다 | 517 |
+| 한의학_문제_원본.jsonl | 과목·그림 라벨 포함 원본 | 517 |
+| 처방_문제.jsonl | 처방 선택형만 추출 | 86 |
+
+**과목별 문제 수:**
+
+| 과목 | 문제 수 | 라우팅 경로 |
+|------|---------|------------|
+| 한의학 기초 | 110 | term |
+| 한약학 응용 | 110 | graph |
+| 내과학1 | 79 | graph |
+| 침구학 | 46 | term |
+| 내과학2 | 32 | graph |
+| 부인과학 | 32 | graph |
+| 보건의약 관계 법규 | 30+20 | plain |
+| 소아과학 | 25 | graph |
+| 예방의학 | 23 | plain |
+| 외과학 | 16 | graph |
+| 신경정신과학 | 16 | graph |
+| 안이비인후과학 | 16 | graph |
+| 한방생리학 | 16 | term |
+| 본초학 | 16 | graph |
 
 ---
 
-## 작동 방식
+## 사용 기술
 
-질문이 들어오면 다음 4단계로 처리됩니다.
+### 그래프 DB — Neo4j
+
+[Neo4j](https://neo4j.com/) Community Edition을 로컬에서 실행합니다.
+Bolt 프로토콜(`bolt://localhost:7687`)로 Python `neo4j` 드라이버가 접속합니다.
+
+**Neo4j 스키마:**
 
 ```
-질문
- ├─ 1. 증상 추출 (문자열 매칭 or LLM)
- ├─ 2. 그래프 검색 (Neo4j — 증상에 맞는 처방 탐색)
- ├─ 3. 벡터 검색 (Chroma — 유사 본문 5개)
- └─ 4. LLM 답변 (그래프 + 벡터 근거 기반)
+(:Node {id, label, name_ko, name_hanja, 계통, 출전, ...})
+  -[:REL {type: "주치" | "구성" | "귀경" | "계통" | "팔강귀속" | "지표" | "포함"}]->
+(:Node {...})
 ```
+
+모든 노드를 단일 레이블 `:Node`로 저장하고 `label` 속성으로 타입을 구분합니다.
+
+**GraphRAG에서 사용하는 Cypher 쿼리:**
+
+```cypher
+MATCH (p:Node {label:'처방'})-[:REL {type:'주치'}]->(s:Node)
+WHERE s.id IN $seeds
+WITH p, collect(DISTINCT s.name_ko) AS matched, count(DISTINCT s) AS score
+ORDER BY score DESC LIMIT 6
+MATCH (p)-[:REL {type:'구성'}]->(h:Node)
+RETURN p.name_ko AS 처방, p.name_hanja AS 한자, p.계통 AS 계통,
+       matched, collect(h.name_ko) AS 약재, score
+```
+
+질문에서 추출된 증상 ID(`$seeds`)와 `주치` 엣지로 연결된 처방을 역방향으로 탐색해
+부합 증상 수(`score`) 기준 상위 6개 처방과 구성 약재를 한 번에 가져옵니다.
+
+### 임베딩 모델 — BGE-m3
+
+`BAAI/bge-m3`를 사용합니다. Beijing Academy of AI(BAAI)에서 공개한 다국어 임베딩 모델로,
+한국어·중국어·영어가 혼재된 한의학 텍스트에 적합합니다.
+
+| 항목 | 내용 |
+|------|------|
+| 모델 | `BAAI/bge-m3` |
+| 벡터 차원 | 1,024 |
+| 언어 | 100+ 다국어 (한국어·한자 포함) |
+| 유사도 | Cosine similarity |
+| 실행 환경 | 로컬 (sentence-transformers, 첫 실행 시 ~2GB 자동 다운로드) |
+| 비용 | 무료 |
+
+Chroma 컬렉션 생성 시 `{"hnsw:space": "cosine"}`으로 코사인 공간을 설정해
+정규화된 벡터의 내적이 코사인 유사도와 동일하도록 합니다.
+
+### 벡터 DB — Chroma
+
+`chromadb.PersistentClient`로 `./chroma_db/` 디렉토리에 영구 저장합니다.
+컬렉션은 `hani_rx`(처방)와 `hani_term`(용어) 두 개로 분리해
+라우팅 경로에 따라 다른 컬렉션을 조회합니다.
 
 ---
 
-## 설치 및 실행
+## 4단계 파이프라인
 
-### 패키지 설치
-```bash
-pip install -r requirements.txt
-```
+### Step 1 — 그래프 적재 (`step1_load_neo4j.py`)
 
-### Step 1 — 그래프 적재 (Neo4j)
+`kg_all_nodes.jsonl`과 `kg_all_edges.jsonl`을 Neo4j에 적재합니다.
+
+- 노드: `:Node {id, label, name_ko, name_hanja, ...}`
+- 엣지: `:REL {type}` (src → dst)
+- 인덱스: `Node.id`, `Node.label`
+- 데이터(특히 `kg_all_edges.jsonl`)를 수정한 뒤에는 반드시 재실행해야 Neo4j에 반영됩니다.
+
 ```bash
 export NEO4J_URI="bolt://localhost:7687"
 export NEO4J_USER="neo4j"
@@ -72,32 +203,155 @@ export NEO4J_PW="비밀번호"
 python step1_load_neo4j.py
 ```
 
-### Step 2 — 벡터DB 구축 (Chroma)
+### Step 2 — 벡터DB 구축 (`step2_build_vectordb.py`)
+
+처방/용어 청크를 BGE-m3로 임베딩해 Chroma에 저장합니다.
+
+- 임베딩 모델: `BAAI/bge-m3` (첫 실행 시 자동 다운로드 ~2GB)
+- 저장 경로: `./chroma_db/`
+- 컬렉션: `hani_rx` (3,094건), `hani_term` (9,074건)
+- 청크 데이터를 수정하면 이 단계를 다시 실행해야 합니다 (수십 분 소요).
+
 ```bash
 python step2_build_vectordb.py
-# 첫 실행 시 BGE-m3 모델 자동 다운로드 (수 GB, 1회)
 ```
 
-### Step 3 — 질문
-```bash
-# LLM 선택 (셋 중 하나)
-export LLM_PROVIDER=ollama    # 로컬·무료 (ollama pull qwen2.5 필요)
-export LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=sk-ant-...
-export LLM_PROVIDER=openai    OPENAI_API_KEY=sk-...
+### Step 3 — 질문 답변 (`step3_graphrag_query.py`)
 
+질문 하나를 받아 4단계로 처리합니다.
+
+```
+질문 텍스트
+  ① extract_seeds  — 증상·변증 노드명 직접 매칭 (or LLM 변환)
+  ② graph_retrieve — Neo4j Cypher: 처방 -[주치]→ seeds 역방향
+  ③ vector_retrieve — BGE-m3 임베딩 + Chroma 유사도 상위 k개
+  ④ call_llm       — 그래프+벡터 근거를 합쳐 LLM 답변 생성
+```
+
+**LLM 선택:**
+
+```bash
+# 로컬 (Ollama, 무료)
+export LLM_PROVIDER=ollama LLM_MODEL=qwen2.5
+
+# OpenAI
+export LLM_PROVIDER=openai OPENAI_API_KEY=sk-...
+
+# Anthropic
+export LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=sk-ant-...
+```
+
+```bash
 python step3_graphrag_query.py "가슴이 두근거리고 쉽게 피로해요"
 ```
 
-### Step 4 — 정답률 비교 평가
-```bash
-python step4_eval.py --n 50       # 전체 문제 중 50개 샘플
-python step4_eval.py --rx-only    # 처방형 문제 86개 전부
+**주요 설계 결정:**
+- `STOP_NAMES = {"한다"}`: 종결어미 "~한다"가 증상 노드 "汗多(한다)"와 충돌하는 버그 방지
+- `temperature=0`: 재현 가능한 결과를 위해 모든 LLM 호출에 고정
+- `seen` 집합: 같은 노드 중복 매칭 방지
+
+### Step 4 — 정답률 비교 평가 (`step4_eval.py`)
+
+3가지 방식을 동시에 실행해 정답률을 비교합니다.
+
+| 방식 | 설명 |
+|------|------|
+| 그냥 LLM | 근거 없이 LLM만 사용 |
+| 벡터 RAG | Chroma 벡터 검색 근거만 사용 |
+| GraphRAG | 그래프 + 벡터 검색 근거 사용 |
+| 라우팅 RAG | 과목/유형에 따라 3가지 중 자동 선택 |
+
+**과목 기반 라우팅:**
+
+```python
+ROUTE_BY_SUBJECT = {
+    "내과학1": "graph",  "내과학2": "graph",
+    "한약학 응용": "graph", "본초학": "graph",
+    "부인과학": "graph",  "소아과학": "graph",
+    "외과학": "graph",   "신경정신과학": "graph",
+    "안이비인후과학": "graph",
+    "침구학": "term",    "한방생리학": "term",
+    "한의학 기초": "term",
+    "예방의학": "plain",
+    "보건의약관계법규": "plain",
+}
 ```
 
-세 가지 방식을 비교합니다:
-- **그냥 LLM** — 검색 없이 LLM만 사용
-- **벡터 RAG** — Chroma 벡터 검색만 사용
-- **GraphRAG** — 그래프 + 벡터 검색 모두 사용
+- `graph` 과목이라도 법규 키워드(`「`, `법」상` 등) 포함 시 → `plain`으로 강등
+- 과목 미상이면 키워드 휴리스틱으로 경로 판단
+
+**주요 옵션:**
+
+```bash
+python step4_eval.py                       # 전체 517문제
+python step4_eval.py --n 50 --seed 42      # 50개 샘플, 시드 고정
+python step4_eval.py --rx-only             # 처방형 86문제만
+python step4_eval.py --rx-only --k 10      # 벡터 청크 수 10개
+python step4_eval.py --skip-figure         # 그림 문제 제외
+python step4_eval.py --source 한의학_문제_원본.jsonl  # 과목 라벨 활성화
+```
+
+**출력 지표:**
+- 과목별 / 라우팅 경로별 / 처방형 vs 그외 / 그림 유무별 정답률
+- `recall@ctx`: 처방형 문제에서 정답 처방명이 검색 근거에 포함된 비율
+- `diag_plain_ok_rag_fail.jsonl`: 그냥 LLM은 맞고 GraphRAG는 틀린 문제 진단 파일
+
+---
+
+## 주치 엣지 보강 (`enrich_주치.py`)
+
+처방_rag_chunks의 `주치증상` 메타데이터를 파싱해 그래프에 누락된 주치 엣지를 추가합니다.
+
+```bash
+python enrich_주치.py --dry-run   # 통계만 출력 (파일 수정 없음)
+python enrich_주치.py             # 실제 추가
+```
+
+추가 후 Step 1을 다시 실행해 Neo4j에 반영해야 합니다.
+
+---
+
+## 전체 실행 순서
+
+```bash
+# 1. 패키지 설치 (최초 1회)
+pip install -r requirements.txt
+
+# 2. 그래프 → Neo4j 적재 (데이터 변경 시 재실행)
+export NEO4J_URI="bolt://localhost:7687"
+export NEO4J_USER="neo4j"
+export NEO4J_PW="비밀번호"
+python step1_load_neo4j.py
+
+# 3. 벡터DB 구축 (데이터 변경 시 재실행, 수십 분 소요)
+python step2_build_vectordb.py
+
+# 4. LLM API 키 설정
+export LLM_PROVIDER=openai
+export OPENAI_API_KEY=sk-...
+
+# 5. 질문 테스트
+python step3_graphrag_query.py "소화가 안되고 입맛이 없으며 기운이 없다"
+
+# 6. 정답률 평가
+python step4_eval.py --source 한의학_문제_원본.jsonl
+```
+
+---
+
+## 평가 결과 (참고)
+
+| 방식 | 정답률 |
+|------|-------|
+| 그냥 LLM | 31.4% |
+| 벡터 RAG | 26.7% |
+| GraphRAG | 33.7% |
+| 라우팅 RAG | 33.7% |
+
+처방형 문제(86개) `recall@ctx` (정답 처방명이 검색 근거에 포함된 비율): 보강 전 4.7%
+
+현재 recall이 낮은 주된 이유: 시험 문제는 구어체 임상 증상("맥이 가늘고 약하다")을 기술하지만
+그래프 주치는 전문 한의학 용어("기허담성", "비신양허")로 등록되어 있어 직접 매칭이 어려움.
 
 ---
 
@@ -105,13 +359,14 @@ python step4_eval.py --rx-only    # 처방형 문제 86개 전부
 
 | 항목 | 비용 |
 |------|------|
-| Neo4j (로컬), Chroma, BGE-m3 임베딩 | 무료 |
-| 답변 LLM (Ollama) | 무료 |
-| 답변 LLM (외부 API) | 호출당 소액 |
+| Neo4j (로컬 Community), Chroma, BGE-m3 임베딩 | 무료 |
+| Ollama 로컬 LLM | 무료 |
+| OpenAI / Anthropic API | 호출당 소액 |
 
 ---
 
 ## 출처
+
 - 표준한의학용어집 (2006)
 - 한의대 내과학 교과서 처방 데이터 (2024)
 - 팔강변증 한의표준임상진료지침 (2023)

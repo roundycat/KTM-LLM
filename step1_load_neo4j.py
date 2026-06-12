@@ -24,8 +24,8 @@ def scalarize(d):
     return out
 
 def main():
-    nodes = [scalarize(n) for n in read("kg_all_nodes.jsonl")]
-    edges = [scalarize(e) for e in read("kg_all_edges.jsonl")]
+    nodes = [scalarize(n) for n in read("data/kg_all_nodes.jsonl")]
+    edges = [scalarize(e) for e in read("data/kg_all_edges.jsonl")]
     driver = GraphDatabase.driver(URI, auth=(USER, PW))
     with driver.session() as s:
         s.run("CREATE CONSTRAINT IF NOT EXISTS FOR (n:Node) REQUIRE n.id IS UNIQUE")

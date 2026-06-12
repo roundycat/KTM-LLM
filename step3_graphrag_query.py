@@ -147,6 +147,13 @@ def call_llm(prompt):
         r = OpenAI().chat.completions.create(
             model=m, temperature=0, messages=[{"role": "user", "content": prompt}])
         return r.choices[0].message.content
+    if prov == "groq":
+        from openai import OpenAI
+        m = os.environ.get("LLM_MODEL", "llama-3.1-8b-instant")
+        r = OpenAI(base_url="https://api.groq.com/openai/v1",
+                   api_key=os.environ["GROQ_API_KEY"]).chat.completions.create(
+            model=m, temperature=0, messages=[{"role": "user", "content": prompt}])
+        return r.choices[0].message.content
     # 기본: Ollama (로컬·무료)
     import requests
     m = os.environ.get("LLM_MODEL", "qwen2.5")

@@ -7,7 +7,7 @@ step4_eval.py — 국가고시 문제집으로 방식별 정답률 비교.
 사용:
   python step4_eval.py --n 50
   python step4_eval.py            # 전체 517
-  python step4_eval.py --rx-only --k 5 --seed 42
+  python step4_eval.py --rx-only --k 10 --seed 42
 """
 import os, json, re, random, argparse
 from collections import defaultdict

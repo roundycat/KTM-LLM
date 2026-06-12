@@ -108,6 +108,29 @@ def vector_retrieve(question, k=5, coll=COLL_RX):
     res = chroma(coll).query(query_embeddings=q, n_results=k)
     return list(zip(res["ids"][0], res["documents"][0]))
 
+def vector_retrieve_with_meta(question, k=5, coll=COLL_RX_CLINICAL):
+    """메타데이터 포함 벡터 검색 — GraphRAG v2용."""
+    q = emb_model().encode([question], normalize_embeddings=True).tolist()
+    res = chroma(coll).query(query_embeddings=q, n_results=k,
+                             include=["documents", "metadatas"])
+    return list(zip(res["documents"][0], res["metadatas"][0]))
+
+# ---------- (2b) 처방명으로 그래프 상세 조회 ----------
+GRAPH_BY_NAME_Q = """
+UNWIND $names AS nm
+MATCH (p:Node {label:'처방', name_ko: nm})
+OPTIONAL MATCH (p)-[:REL {type:'구성'}]->(h:Node)
+OPTIONAL MATCH (p)-[:REL {type:'주치'}]->(s:Node)
+RETURN p.name_ko AS 처방, p.name_hanja AS 한자, p.계통 AS 계통,
+       collect(DISTINCT h.name_ko)[0..8] AS 약재,
+       collect(DISTINCT s.name_ko)[0..6] AS 주치
+"""
+def graph_retrieve_by_name(rx_names):
+    """임상 벡터 검색으로 찾은 처방명 → Neo4j 상세 조회."""
+    if not rx_names: return []
+    with driver().session() as s:
+        return [r.data() for r in s.run(GRAPH_BY_NAME_Q, names=rx_names)]
+
 # ---------- (4) LLM 호출 ----------
 def call_llm(prompt):
     prov = os.environ.get("LLM_PROVIDER", "ollama")
@@ -133,6 +156,23 @@ def call_llm(prompt):
     return r.json().get("response", "")
 
 # ---------- 근거 조립 + 답변 ----------
+def build_context_v2(graph_rows, clinical_chunks):
+    """GraphRAG v2: 임상 벡터 → 처방 후보 → 그래프 상세 보강."""
+    lines = []
+    if graph_rows:
+        lines.append("[처방 상세 정보]")
+        for g in graph_rows:
+            계통 = g.get("계통") or ""
+            주치 = ", ".join(g.get("주치") or [])
+            약재 = ", ".join(g.get("약재") or [])
+            lines.append(f"- {g['처방']}({g['한자']}) [{계통}] "
+                         f"| 주치: {주치} | 구성: {약재}")
+    if clinical_chunks:
+        lines.append("\n[임상 적응 설명]")
+        for doc, _ in clinical_chunks:
+            lines.append(f"- {doc[:300]}")
+    return "\n".join(lines)
+
 def build_context(graph_rows, chunks):
     lines = []
     if graph_rows:

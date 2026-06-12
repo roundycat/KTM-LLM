@@ -1,0 +1,7 @@
+neo4j>=5.0
+chromadb>=0.5
+sentence-transformers>=3.0
+requests>=2.31
+# 선택: 외부 LLM API를 쓸 때만
+anthropic>=0.40
+openai>=1.40

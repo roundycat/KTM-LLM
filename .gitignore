@@ -1,0 +1,30 @@
+# --- 비밀키 ---
+.env
+*.key
+
+# --- 대용량 원본/중간 산출물 (레포에 올리지 않음) ---
+raw/
+img/
+tiles/
+_*.py
+_*.png
+
+# --- 세션/도구 로컬 설정 ---
+.claude/
+
+# --- 파인튜닝/평가 산출물 ---
+data/finetune_*.jsonl
+results/
+
+# --- Python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+.python-version
+
+# --- OS / 에디터 ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

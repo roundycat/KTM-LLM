@@ -8,7 +8,7 @@ const A = (typeof args === 'string') ? JSON.parse(args) : (args || {})
 let IDXS = Array.isArray(A.idxs) ? A.idxs : []
 if (!IDXS.length && A.start != null && A.end != null) { for (let i = A.start; i <= A.end; i++) IDXS.push(i) }
 const K = A.k || 1
-const EVAL = 'D:\\tmp\\persubj\\eval_input.jsonl'
+const EVAL = A.evalfile || 'D:\\tmp\\persubj\\eval_input.jsonl'  // 해설RAG는 eval_input_hae.jsonl 지정
 
 const SCHEMA = {
   type: 'object', additionalProperties: false, required: ['idx', 'pred'],

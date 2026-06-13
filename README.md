@@ -2,7 +2,7 @@
 
 환자 증상을 입력하면 지식 그래프(Neo4j)와 벡터 검색(Chroma)을 결합해
 LLM이 처방 후보와 근거를 제시하는 시스템입니다.
-한의사 국가고시 517문제로 그냥 LLM / 벡터 RAG / GraphRAG / 보기Graph 정답률을 비교 평가합니다.
+한의사 국가고시 517문제로 그냥 LLM / 벡터 RAG / GraphRAG 정답률을 비교 평가합니다.
 
 ---
 
@@ -251,7 +251,7 @@ python step3_graphrag_query.py "가슴이 두근거리고 쉽게 피로해요"
 |------|------|--------|
 | 그냥 LLM | 근거 없이 LLM만 사용 | — |
 | 벡터 RAG | Chroma 벡터 검색 근거만 사용 | `hani_rx_clinical` |
-| GraphRAG | 벡터 seed 추출 + 그래프 + 벡터 검색 | `hani_rx_clinical` |
+| GraphRAG | BGE-m3 seed 벡터화 → 그래프 + 벡터 검색 | `hani_rx_clinical` |
 
 **GraphRAG seed 추출 방식:**
 ```
@@ -395,15 +395,20 @@ python step4_eval.py --rx-only --k 20
 
 ---
 
-#### qwen2.5 (Ollama, 로컬, 초기 k=5)
+### Ollama 로컬 모델 비교 (`--rx-only --k 20`, 처방형 86문제)
 
-| 방식 | 정답률 |
-|------|-------|
-| 그냥 LLM | 30.2% |
-| 벡터 RAG | 22.1% |
-| **GraphRAG** | **29.1%** |
+개선된 시스템(임상 청크 재작성 + 누락 처방 추가 + seed 벡터화)에서 각 모델 성능 비교.
 
-`recall@ctx`: 2.3% (2/86)
+| 모델 | 그냥 LLM | 벡터 RAG | GraphRAG |
+|------|---------|---------|---------|
+| qwen2.5 | 32.6% | 31.4% | **34.9%** |
+| exaone3.5 | 25.6% | 27.9% | **32.6%** |
+| llama3.1 | 23.3% | 27.9% | **31.4%** |
+| mistral | 27.9% | 26.7% | 24.4% |
+
+**mistral 특이사항:** GraphRAG(24.4%)가 그냥 LLM(27.9%)보다 낮음. 한의학 한문 용어가 포함된 그래프 근거를 처리하는 데 약해 RAG 컨텍스트가 오히려 혼란을 주는 것으로 보임.
+
+모든 모델에서 GraphRAG ≥ 벡터 RAG ≥ 그냥 LLM 순서를 보이는 qwen2.5·exaone3.5·llama3.1과 달리, mistral은 RAG 근거를 효과적으로 활용하지 못함.
 
 ---
 

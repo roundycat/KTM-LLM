@@ -2,8 +2,7 @@
 step4_eval.py — 국가고시 문제집으로 방식별 정답률 비교.
   - 그냥 LLM   : 근거 없이
   - 벡터 RAG   : Chroma 벡터 검색만
-  - GraphRAG   : LLM 용어 추출 → 그래프+벡터 근거 검색
-  - 보기Graph  : 보기 처방명 → Neo4j 직접 조회
+  - GraphRAG   : BGE-m3 seed 벡터화 → 그래프+벡터 근거 검색
 사용:
   python step4_eval.py --n 50
   python step4_eval.py            # 전체 517
@@ -11,9 +10,9 @@ step4_eval.py — 국가고시 문제집으로 방식별 정답률 비교.
 """
 import os, json, re, random, argparse
 from collections import defaultdict
-from step3_graphrag_query import (call_llm, extract_seeds_llm, extract_seeds_vector,
-    graph_retrieve, vector_retrieve, graph_retrieve_by_name,
-    build_context, build_context_v2, COLL_RX, COLL_RX_CLINICAL)
+from step3_graphrag_query import (call_llm, extract_seeds_vector,
+    graph_retrieve, vector_retrieve,
+    build_context, COLL_RX, COLL_RX_CLINICAL)
 
 QFILE  = "eval/한의학_문제.jsonl"
 SOURCE = "eval/한의학_문제_원본.jsonl"
@@ -73,21 +72,6 @@ def rag_answer(question, opts, k=5, coll=COLL_RX, return_ctx=False):
         return choice, seeds, ctx
     return choice
 
-def graphrag_options_answer(question, options, opts_str):
-    """보기 처방명 → Neo4j 직접 조회 → LLM. 합방은 분리 조회. 매칭 없으면 plain LLM."""
-    rx_names = []
-    for o in options:
-        nm = o.split("(")[0].strip()
-        if " 합 " in nm:
-            rx_names.extend(nm.split(" 합 "))
-        else:
-            rx_names.append(nm)
-    graph_rows = graph_retrieve_by_name(rx_names)
-    if not graph_rows:
-        return parse_choice(call_llm(BASE_PROMPT.format(q=question, opts=opts_str)))
-    ctx = build_context_v2(graph_rows, [])
-    return parse_choice(call_llm(RAG_PROMPT.format(ctx=ctx, q=question, opts=opts_str)))
-
 def pct(a, b): return f"{a/b*100:.1f}%" if b else "  -  "
 
 def main():
@@ -113,7 +97,7 @@ def main():
     if args.n:
         Q = Q[:args.n]
 
-    by = lambda: {"base": 0, "vec": 0, "rag": 0, "opts": 0, "n": 0}
+    by = lambda: {"base": 0, "vec": 0, "rag": 0, "n": 0}
     overall   = by()
     stat_subj = defaultdict(by)
     stat_type = defaultdict(by)
@@ -129,9 +113,8 @@ def main():
         opts = fmt_opts(q["options"]); gold = q["answer"]
         is_rx = bool(RX_PRESCRIPTION.search(q["question"]))
 
-        b  = parse_choice(call_llm(BASE_PROMPT.format(q=q["question"], opts=opts)))
-        v  = vector_rag_answer(q["question"], opts, k=args.k)
-        op = graphrag_options_answer(q["question"], q["options"], opts)
+        b = parse_choice(call_llm(BASE_PROMPT.format(q=q["question"], opts=opts)))
+        v = vector_rag_answer(q["question"], opts, k=args.k)
 
         if is_rx:
             r, seeds_r, ctx_r = rag_answer(q["question"], opts, k=args.k, coll=COLL_RX_CLINICAL, return_ctx=True)
@@ -141,18 +124,18 @@ def main():
         else:
             r = rag_answer(q["question"], opts, k=args.k, coll=COLL_RX)
 
-        rb, rv, rr, rop = (b==gold), (v==gold), (r==gold), (op==gold)
+        rb, rv, rr = (b==gold), (v==gold), (r==gold)
         for d in (overall, stat_subj[subject],
                   stat_type["처방형" if is_rx else "그외"],
                   stat_fig["그림" if has_fig else "텍스트"]):
-            d["n"]+=1; d["base"]+=rb; d["vec"]+=rv; d["rag"]+=rr; d["opts"]+=rop
+            d["n"]+=1; d["base"]+=rb; d["vec"]+=rv; d["rag"]+=rr
 
         if rb and not rr:
             if is_rx:
                 diag.append({
                     "q": q["question"][:80], "과목": subject, "rx": is_rx,
                     "gold": gold, "answer_text": answer_text,
-                    "그냥": b, "벡터": v, "Graph": r, "보기Graph": op,
+                    "그냥": b, "벡터": v, "Graph": r,
                     "정답이_근거에_있었나": ctx_has_ans,
                     "seeds": seeds_r, "ctx_head": ctx_r[:500],
                 })
@@ -162,26 +145,25 @@ def main():
                 diag.append({
                     "q": q["question"][:80], "과목": subject, "rx": is_rx,
                     "gold": gold, "answer_text": at,
-                    "그냥": b, "벡터": v, "Graph": r, "보기Graph": op,
+                    "그냥": b, "벡터": v, "Graph": r,
                     "정답이_근거에_있었나": at.split("(")[0] in ctx_r,
                     "seeds": seeds_r, "ctx_head": ctx_r[:500],
                 })
 
         tag = "[처방]" if is_rx else "     "
         print(f"[{i:3}/{len(Q)}] {tag}<{subject[:6]:6}> 정답{gold} "
-              f"| 그냥={b} 벡터={v} Graph={r} 보기Graph={op}")
+              f"| 그냥={b} 벡터={v} Graph={r}")
 
     def table(title, d):
         print(f"\n## {title}")
-        print(f"{'키':<14}{'n':>4}{'그냥':>8}{'벡터':>8}{'Graph':>8}{'보기Graph':>10}")
+        print(f"{'키':<14}{'n':>4}{'그냥':>8}{'벡터':>8}{'Graph':>8}")
         for key, v in sorted(d.items(), key=lambda x: -x[1]['n']):
             print(f"{key:<14}{v['n']:>4}{pct(v['base'],v['n']):>8}{pct(v['vec'],v['n']):>8}"
-                  f"{pct(v['rag'],v['n']):>8}{pct(v['opts'],v['n']):>10}")
+                  f"{pct(v['rag'],v['n']):>8}")
 
     o = overall
     print(f"\n===== 전체 n={o['n']} =====")
-    print(f"그냥 LLM : {pct(o['base'],o['n'])}   벡터 RAG : {pct(o['vec'],o['n'])}")
-    print(f"GraphRAG : {pct(o['rag'],o['n'])}   보기Graph : {pct(o['opts'],o['n'])}")
+    print(f"그냥 LLM : {pct(o['base'],o['n'])}   벡터 RAG : {pct(o['vec'],o['n'])}   GraphRAG : {pct(o['rag'],o['n'])}")
     table("과목별", stat_subj)
     table("유형별", stat_type)
     table("그림 유무별", stat_fig)

@@ -50,6 +50,41 @@ def name_index():
 # 한국어 종결어미·일반어와 충돌하는 증상 표면형 — 매칭에서 제외
 STOP_NAMES = {"한다"}   # SY-0410 汗多: '한다'가 종결어미 '~한다'와 충돌
 
+@functools.lru_cache(maxsize=1)
+def _symptom_nodes_and_texts():
+    nodes, texts = [], []
+    for l in open("data/kg_all_nodes.jsonl", encoding="utf-8"):
+        n = json.loads(l)
+        if n["type"] in ("증상", "변증") and len(n.get("name_ko", "")) >= 2:
+            nodes.append(n)
+            desc = n.get("일반인설명", "")
+            texts.append(n["name_ko"] + (" " + desc if desc else ""))
+    return nodes, texts
+
+@functools.lru_cache(maxsize=1)
+def _symptom_embeddings():
+    import numpy as np
+    nodes, texts = _symptom_nodes_and_texts()
+    embs = emb_model().encode(texts, normalize_embeddings=True,
+                               batch_size=256, show_progress_bar=False)
+    return nodes, np.array(embs)
+
+def extract_seeds_vector(question, top_k=10, threshold=0.25):
+    """BGE-m3 유사도로 증상 노드 seed 추출 — LLM 번역 불필요."""
+    import numpy as np
+    nodes, node_embs = _symptom_embeddings()
+    q_emb = emb_model().encode([question], normalize_embeddings=True)
+    sims = (node_embs @ q_emb.T).squeeze()
+    top_idx = sims.argsort()[::-1][:top_k]
+    seeds, names, seen = [], [], set()
+    for i in top_idx:
+        if float(sims[i]) < threshold:
+            break
+        nid = nodes[i]["id"]
+        if nid not in seen:
+            seeds.append(nid); names.append(nodes[i]["name_ko"]); seen.add(nid)
+    return seeds, names
+
 # ---------- (1) 증상/변증 추출 ----------
 def extract_seeds(question):
     """질문 텍스트에서 그래프 노드 이름과 직접 매칭 (한의학 시험 문어체에 적합)."""

@@ -11,8 +11,8 @@ step4_eval.py — 국가고시 문제집으로 방식별 정답률 비교.
 """
 import os, json, re, random, argparse
 from collections import defaultdict
-from step3_graphrag_query import (call_llm, extract_seeds_llm, graph_retrieve,
-    vector_retrieve, graph_retrieve_by_name,
+from step3_graphrag_query import (call_llm, extract_seeds_llm, extract_seeds_vector,
+    graph_retrieve, vector_retrieve, graph_retrieve_by_name,
     build_context, build_context_v2, COLL_RX, COLL_RX_CLINICAL)
 
 QFILE  = "eval/한의학_문제.jsonl"
@@ -65,7 +65,7 @@ def vector_rag_answer(question, opts, k=5, coll=COLL_RX_CLINICAL):
     return parse_choice(call_llm(RAG_PROMPT.format(ctx=ctx, q=question, opts=opts)))
 
 def rag_answer(question, opts, k=5, coll=COLL_RX, return_ctx=False):
-    seeds, _ = extract_seeds_llm(question)
+    seeds, _ = extract_seeds_vector(question)
     g = graph_retrieve(seeds)
     ctx = build_context(g, vector_retrieve(question, k=k, coll=coll))
     choice = parse_choice(call_llm(RAG_PROMPT.format(ctx=ctx, q=question, opts=opts)))

@@ -17,14 +17,18 @@ from step3_graphrag_query import call_llm
 IN_FILE  = "data/처방_rag_chunks.jsonl"
 OUT_FILE = "data/처방_rag_chunks_clinical.jsonl"
 
-PROMPT = """한의사 국가고시 문체로, 아래 처방의 주치증상을 실제 환자가 병원에 왔을 때 호소하는 임상 표현으로 바꿔 2~3문장으로 작성하세요.
-한의학 용어(기허담성, 비신양허 등)를 그대로 쓰지 말고, 환자 증상 위주로 쉽게 설명하세요.
+PROMPT = """한의사 국가고시 5지선다 문제에서 이 처방이 정답인 상황을 2~3문장으로 묘사하세요.
+규칙:
+1. 반드시 환자 증상 묘사로 시작하세요 (처방명·한자명 언급 금지)
+2. 국가고시 문체 사용 ("~하며", "~을 호소하고", "~한 경우")
+3. 마지막 줄에만 "처방: 처방명(한자) | 계통: 계통명" 형식으로 처방 정보 기재
 
 처방명: {name}({hanja})
 주치증상: {juchi}
 구성약재: {herbs}
+계통: {system}
 
-임상 적응 설명 (2~3문장):"""
+증상 묘사 (처방명 언급 없이):"""
 
 
 def load_unique_chunks(path):
@@ -60,7 +64,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=0, help="처리 수 제한 (0=전체)")
     ap.add_argument("--dry-run", action="store_true", help="처음 5개만 출력, 저장 안 함")
+    ap.add_argument("--overwrite", action="store_true", help="기존 출력 파일 삭제 후 처음부터 재생성")
     args = ap.parse_args()
+
+    if args.overwrite and os.path.exists(OUT_FILE):
+        os.remove(OUT_FILE)
+        print(f"기존 {OUT_FILE} 삭제 완료 → 처음부터 재생성")
 
     chunks = load_unique_chunks(IN_FILE)
     if args.dry_run:
@@ -77,18 +86,19 @@ def main():
     try:
         for i, c in enumerate(pending, 1):
             m = c.get("metadata", {})
-            name  = m.get("처방명", "")
-            hanja = m.get("처방한자", "")
-            juchi = ", ".join(m.get("주치증상", []))
-            herbs = ", ".join(m.get("구성약재", [])[:10])
+            name   = m.get("처방명", "")
+            hanja  = m.get("처방한자", "")
+            juchi  = ", ".join(m.get("주치증상", []))
+            herbs  = ", ".join(m.get("구성약재", [])[:10])
+            system = m.get("계통", "")
 
-            prompt = PROMPT.format(name=name, hanja=hanja, juchi=juchi, herbs=herbs)
+            prompt = PROMPT.format(name=name, hanja=hanja, juchi=juchi,
+                                   herbs=herbs, system=system)
             clinical = call_llm(prompt).strip()
 
             new_text = (
-                f"{name}({hanja}) — 임상 적응증\n"
                 f"{clinical}\n"
-                f"구성: {herbs}"
+                f"처방: {name}({hanja}) | 계통: {system} | 구성: {herbs}"
             )
             new_chunk = {
                 "id": c["id"] + "_clin",

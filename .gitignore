@@ -17,3 +17,6 @@ chroma_db/
 .vscode/
 .idea/
 *.DS_Store
+
+# Generated diagnostic/eval output files
+eval/diag_*.jsonl

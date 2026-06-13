@@ -134,7 +134,7 @@ def main():
         op = graphrag_options_answer(q["question"], q["options"], opts)
 
         if is_rx:
-            r, seeds_r, ctx_r = rag_answer(q["question"], opts, k=args.k, coll=COLL_RX, return_ctx=True)
+            r, seeds_r, ctx_r = rag_answer(q["question"], opts, k=args.k, coll=COLL_RX_CLINICAL, return_ctx=True)
             answer_text = q["options"][gold - 1] if gold >= 1 else ""
             ctx_has_ans = answer_text.split("(")[0] in ctx_r
             rx_ctx_n += 1; rx_ctx_hit += int(ctx_has_ans)

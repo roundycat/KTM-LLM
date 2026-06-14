@@ -291,7 +291,13 @@ python scripts/assemble.py                                # 5) 전사본 + 정�
 │   ├── evaluate.py
 │   └── run_all.py
 ├── scripts/                         # PDF→데이터셋 추출 파이프라인
+├── graphrag/                        # GraphRAG 트랙(정본): Neo4j+Chroma 처방 추천·평가
+├── bigse0u1/                        # ⚠️ graphrag/ 의 통합 전 원본 스냅샷(아카이브)
 ├── requirements.txt
 ├── .env.example
 └── README.md
 ```
+
+> **graphrag/ vs bigse0u1/**: 두 디렉터리는 같은 GraphRAG 작업의 두 버전이다.
+> **`graphrag/` 가 정본**(리팩터·보강 반영)이고, `bigse0u1/` 은 통합 전 원본 스냅샷(보존용)이다.
+> 실행·재현·인용은 `graphrag/` 를 사용한다.

@@ -1,336 +1,185 @@
-# 한의학 국가시험 LLM 연구 (KTM-LLM)
+# 한의학 국가시험 RAG · GraphRAG 연구 (KTM-LLM)
 
-국시원 공개 기출 **5지선다 517문항**으로 ① 로컬 vs 글로벌 LLM 비교 ② 용어RAG·CoT·자기일관성·환각완화
-③ **GraphRAG·유형선택적RAG** ④ 답안 해설 생성·검증을 수행. 전부 **로컬 추론, 비용 $0**(해설만 Claude).
+국시원 공개 기출 **5지선다 517문항**으로, 한의학 지식을 **검색증강(RAG)** 으로 주입했을 때
+로컬 오픈 LLM의 정답률이 오르는지를 검증한다. 두 갈래의 RAG만 다룬다.
 
-> 🧭 **전체를 한눈에 → [연구_전체_인덱스.md](연구_전체_인덱스.md)** | 상세: [HANDOVER.md](HANDOVER.md) ·
-> [EXPERIMENTS.md](EXPERIMENTS.md) · [graphrag/PAPER_한의학_GraphRAG.md](graphrag/PAPER_한의학_GraphRAG.md) ·
-> [graphrag/MULTIMODEL_REPORT.md](graphrag/MULTIMODEL_REPORT.md) · 원본 GraphRAG [bigse0u1/](bigse0u1/)
+1. **용어 RAG** — 문제에 등장하는 KIOM 표준용어 정의를 컨텍스트로 주입(`training/`).
+2. **GraphRAG** — 보기 처방을 한의학 지식그래프에서 조회해 구성·주치·계통을 근거로 주입,
+   그리고 문항 유형에 따라 선택적으로 적용하는 **선택적RAG**(`graphrag/`, 원본 `bigse0u1/`).
+
+> 모든 평가는 **로컬 추론(Ollama, GPU), 비용 $0**. 모델 가중치 학습(파인튜닝)은 하지 않고
+> **사전학습 모델 그대로 추론**한다. 정답은 채점에만 쓰고 모델에 주지 않는다(누수 없음).
+
+> 📚 상세: [graphrag/PAPER_한의학_GraphRAG.md](graphrag/PAPER_한의학_GraphRAG.md) ·
+> [graphrag/MULTIMODEL_REPORT.md](graphrag/MULTIMODEL_REPORT.md) · 원본 GraphRAG [bigse0u1/](bigse0u1/) ·
+> 원자료 [results/](results/)
 
 ---
 
-## 📊 전체 결과 (6개 모델, 전체 517문항)
+## 📊 전체 결과 (6개 로컬 모델 · 전체 517문항)
 
-### A. GraphRAG — 그냥 vs 그래프 vs **선택적RAG** (전체 517)
-보기 처방을 지식그래프에서 조회해 근거 주입. **선택적RAG = 처방형→그래프 / 그외→그냥**(누수 없음).
+### A. GraphRAG — 그냥 vs 그래프 vs **선택적RAG**
 
-| 모델 | 그냥LLM | 그래프RAG | **선택적RAG** | 처방형 그래프 Δ |
-|---|---:|---:|---:|---:|
-| **qwen2.5 7B** | 48.7% | 48.0% | **51.3%** | **+15.1%p** ⭐ |
-| gemma2 9B | 47.0% | 47.0% | 47.6% | +3.5%p |
-| exaone3.5 7.8B | 42.6% | 43.5% | 42.7% | +1.2%p |
-| llama3.1 8B | 34.6% | 29.2% | 34.8% | +1.2%p |
-| solar 10.7B | 32.3% | 27.5% | 32.5% | +1.2%p |
-| mistral 7B | 31.7% | 28.6% | 30.4% | −8.1%p |
+보기 처방을 지식그래프에서 조회해 **구성약재·주치증상·계통**을 근거로 주입한다.
+**선택적RAG = 처방형 문항이면 그래프RAG, 그 외면 그냥LLM**(문항 유형만 보고 라우팅, 정답 미사용).
 
-→ **그래프RAG는 처방형에서만 효과**(qwen +15.1%p). 효과는 **모델 의존적**(qwen 압도 … mistral 역효과).
-전체×과목별 표 → [MULTIMODEL_REPORT.md](graphrag/MULTIMODEL_REPORT.md).
+| 모델 | 그냥LLM | 그래프RAG | **선택적RAG** | Δ(선택−그냥) | 처방형 그래프 Δ |
+|---|---:|---:|---:|---:|---:|
+| **qwen2.5 7B** | 48.7% | 48.0% | **51.3%** | **+2.5%p** | **+15.1%p** ⭐ |
+| gemma2 9B | 47.0% | 47.0% | **47.6%** | +0.6%p | +3.5%p |
+| exaone3.5 7.8B | 42.6% | 43.5% | **42.7%** | +0.2%p | +1.2%p |
+| llama3.1 8B | 34.6% | 29.2% | **34.8%** | +0.2%p | +1.2%p |
+| solar 10.7B | 32.3% | 27.5% | **32.5%** | +0.2%p | +1.2%p |
+| mistral 7B | 31.7% | 28.6% | **30.4%** | −1.4%p | −8.1%p |
 
-### B. 용어RAG·추론기법·환각완화 (전체 517)
-| 방식 | Qwen2.5 7B(글로벌) | Llama3.1 8B | EXAONE 3.5 7.8B(한국형) |
+- **그래프RAG는 "처방형" 문항에서만 효과**(전체 평균으론 희석됨). 처방형 86 / 그 외 431.
+- 효과는 **강하게 모델 의존적**: 한자·중국어에 강한 qwen이 압도(+15.1%p), 영어권 mistral은 역효과(−8.1%p).
+- **선택적RAG**(유형 라우팅)로 무관 근거의 방해를 제거 → 거의 모든 모델에서 그냥LLM 이상.
+- 전체×과목별 표 → [graphrag/MULTIMODEL_REPORT.md](graphrag/MULTIMODEL_REPORT.md).
+
+> **원본(LLM=gpt-4o-mini) 4방식 비교** — 그냥 59.6% · 벡터RAG 59.6% · GraphRAG 59.2% · 보기Graph **60.0%**
+> (처방형 86: 30.2 / 29.1 / 31.4 / **34.9%**). recall@ctx ≈ 4.7%(증상→처방 검색이 정답 처방을 거의 못 찾음).
+
+### B. 용어 RAG — KIOM 표준용어 정의 주입
+
+문제+보기에 **등장하는 용어**의 정의를 한자 우선 매칭으로 상위 6개 주입(임베딩·API 불필요·결정론적).
+
+| 모델 | base | **+용어RAG** | Δ |
 |---|---:|---:|---:|
-| base | 48.55% | 34.24% | 43.13% |
-| +용어RAG | 49.52% | 33.46% | 46.62% |
-| +CoT | 50.10% | 35.01% | — |
-| **+CoT·자기일관성(×5)** | **52.61%** | **37.33%** | — |
-| vote3(환각완화·3회2합의) | 47.78% | — | 43.33% |
+| 한국형 EXAONE 3.5 7.8B | 43.71% | **46.62%** | **+2.91%p** |
+| 한국형 SOLAR 10.7B | 33.08% | 34.62% | +1.54%p |
+| 글로벌 Qwen2.5 7B | 48.55% | 49.52% | +0.97%p |
+| 글로벌 Llama3.1 8B | 34.24% | 33.46% | −0.78%p |
 
-→ **최대 향상 레버 = CoT+자기일관성**(Qwen +4.06%p). RAG는 한국어능력 비례. vote3는 향상 없음.
-SOLAR·Gemma2·Mistral 포함 전 수치 → [EXPERIMENTS.md](EXPERIMENTS.md), 원자료 → [results/](results/).
+- **RAG 효과 = 모델의 한국어 능력에 비례**: 한국어를 잘 읽는 EXAONE이 가장 큰 이득(+2.91%p),
+  한국어 약한 Llama는 거의 무효(−0.78%p).
+- 과목별로는 **용어가 곧 답인 과목에 집중**(글로벌 Qwen 기준):
 
-### C. 답안 해설 517 생성 + 2단계 적대 검증
-Claude Opus 다중에이전트 생성 → 1·2차 독립 검증 → 오류 16건 교정, **정확도 ≈96.9%**.
-→ [dataset/해설_검증_리포트.md](dataset/해설_검증_리포트.md)
+| 과목 | base | +용어RAG | Δ |
+|---|---:|---:|---:|
+| 본초학 | 7.69% | 38.46% | **+30.8%p** |
+| 침구학 | 30.30% | 42.42% | **+12.1%p** |
+| 부인과학 | 41.38% | 48.28% | +6.9%p |
+| 한방생리학 | 50.00% | 43.75% | −6.3%p |
+| 소아과학 | 57.14% | 47.62% | −9.5%p |
 
----
+→ 임상추론 위주 과목에서는 주입 용어가 오답 방향으로 끌어당기는 distractor로 작용. 순효과는 모델·과목에 좌우.
 
-### 실험 순서
-1. **로컬(한국형 EXAONE)** 과 **글로벌(범용 Qwen)** 에 한의학 시험을 풀게 함
-2. 두 모델의 **평균 정답률** 도출
-3. 글로벌 모델에 **한의학 용어(KIOM 표준용어집)** 를 학습 — 두 방식
-   - **RAG 주입(기본·무료)**: 문제에 관련 용어 정의를 컨텍스트로 주입 (`rag.py`)
-   - **파인튜닝(선택·유료)**: OpenAI SFT (`prepare_terminology.py` → `finetune.py --terminology`)
-4. 1~2를 반복하여 **글로벌 모델의 향상(Δ)** 확인 (`report.py`)
-
-- **로컬 모델**: [Ollama](https://ollama.com) 로 띄운 한국형 오픈웨이트 LLM(기본 `exaone3.5:7.8b`).
-- **글로벌 모델**: 기본은 무료 로컬 범용 모델(`qwen2.5:7b`). `.env` 로 OpenAI/Gemini 등
-  OpenAI 호환 클라우드로 교체 가능. 로컬·클라우드 모두 **동일한 평가 코드**로 채점한다.
-
-> 💸 **완전 무료로 돌리기**: 두 모델 모두 Ollama 로컬 + 용어는 RAG 주입 → API 비용 0.
-> OpenAI 파인튜닝은 2026년 신규 사용자에게 닫히는 중이며 무료가 아니므로, 기본 경로는 RAG 입니다.
-
-> ⚠️ **저작권 유의**: 국시원 기출문제와 표준한의학용어집(대한한의학회)은 저작물입니다.
-> **개인 학습·연구용**으로만 사용하고 외부 재배포는 주의하세요.
+> 참고: temperature 0이라도 배치·런타임 차로 런 간 ±1문항 변동이 있다. 표의 수치는 각 행 내에서 일관된 런 기준.
 
 ---
 
-## 📊 실험 결과 (전체 517 텍스트 문항)
+## 📦 데이터 (`dataset/`)
 
-로컬 **EXAONE 3.5 7.8B**(한국형) vs 글로벌 **Qwen2.5 7B**(범용), 둘 다 Ollama 로컬(GPU).
-글로벌 모델에 **KIOM 표준한의학용어집(9,074개)** 을 **RAG로 주입**한 전후 비교.
+| 자원 | 내용 | 규모 |
+|---|---|---:|
+| `한의학_문제.jsonl` | 그림 비의존 텍스트 5지선다(평가 메인) | 517 |
+| `한의학_문제_전체.jsonl` | 그림생략(70) 포함 + 과목·정답 메타 | 587 |
+| `한의학_용어.jsonl` | KIOM 표준한의학용어집(V2.1·국문) — 용어RAG 지식원 | 9,074 |
 
-| 단계 | 모델 | 정답률 | 맞음/전체 |
-|---|---|---:|---:|
-| ① 학습 전 | 한국형 EXAONE 3.5 7.8B | 43.13% | 223/517 |
-| ① 학습 전 | 글로벌 Qwen2.5 7B | 48.55% | 251/517 |
-| | **두 모델 평균** | **45.84%** | |
-| ② 용어 주입 후 | 글로벌 Qwen2.5 7B **+ 용어 RAG** | **49.52%** | 256/517 |
-| | **글로벌 향상(Δ)** | **+0.97%p** | +5문항 |
+수집 회차: **제81회 한의사(2026)** · **제27회 한약사(2026)**. 정답은 국시원 공식 정답표 기준(100% 매칭 검증).
 
-- 용어 주입 효과는 **용어 의존도가 높은 과목에 집중**된다:
-  **본초학 +30.8%p**(7.7→38.5), **침구학 +12.1%p**(30.3→42.4), 부인과학 +6.9%p.
-  반대로 임상추론 위주 과목(소아·생리)은 소폭 하락 → 순효과 **+0.97%p**.
-- 전체 과목별 표·원자료: `results/report.md`, `results/summary.json`.
-- 작은 검증셋(51문항)에서는 ±0으로 노이즈가 크며, 전체 문항으로 봐야 신호가 안정적이다.
+**지식그래프(`graphrag/data/`, `bigse0u1/data/`)** — 노드 **7,692** / 엣지 **39,996**.
 
-> 결과는 GPU·모델 버전·Ollama 양자화에 따라 달라질 수 있다. 재현: `python training/run_all.py --all`.
+| 노드 | 처방 | 증상 | 약재 | 증상지표 | 장부 | 변증 | 계통 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 7,692 | 3,094 | 3,873 | 645 | 54 | 13 | 8 | 5 |
 
----
+| 엣지 | 구성 | 주치 | 계통 | 팔강귀속 | 귀경 | 지표 | 포함 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 39,996 | 25,565 | 8,858 | 3,094 | 1,447 | 972 | 54 | 6 |
 
-## 목차
-1. [데이터셋](#-데이터셋-dataset)
-2. [전체 흐름](#-전체-흐름)
-3. [빠른 시작](#-빠른-시작)
-4. [코드 구성](#-코드-구성-training)
-5. [파인튜닝 모드(번호만 vs 해설)](#-파인튜닝-모드)
-6. [해설 필드 생성](#-해설-필드-생성)
-7. [GitHub Actions 자동 평가](#-github-actions-자동-평가)
-8. [비용 가이드](#-비용-가이드)
-9. [트러블슈팅](#-트러블슈팅)
-10. [데이터 추출 파이프라인](#-데이터-추출-파이프라인-scripts)
+**스키마(문항)** — `{source, 교시, 과목, 번호, question, options[5], answer(1~5), answer_text, has_figure}`.
+`has_figure=true`(70문항)는 이미지 의존이라 평가에서 제외(텍스트만 517).
+
+> ⚠️ **저작권**: 국시원 기출·표준한의학용어집·교과서 처방 데이터는 저작물입니다. 개인 학습·연구용으로만 사용하세요.
 
 ---
 
-## 📦 데이터셋 (`dataset/`)
+## 🔬 방법
 
-| 파일 | 내용 | 문항 수 |
+### 용어 RAG (`training/rag.py`, `training/evaluate.py`)
+
+```
+문제 + 보기 ──▶ 등장 용어 검색(한자 우선 → 한국어 한글경계 보충) ──▶ 정의 상위6 주입 ──▶ LLM 풀이 ──▶ 정답 번호 파싱
+```
+- 한자 매칭은 일반어와 거의 안 겹쳐 고정밀, 한국어는 단어 경계 정규식으로 오매칭 차단(`대장균`에 `대장` 등).
+- 1글자 용어 제외, 일반어 불용어 제거. 임베딩/외부 API 불필요 → 무료·결정론적.
+
+### GraphRAG (`graphrag/`, 원본 `bigse0u1/`)
+
+```
+문제 + 보기 ──▶ 보기 5개 처방명 추출(합방 분리) ──▶ 지식그래프 조회(구성·주치·계통) ──▶ 근거 주입 ──▶ LLM 풀이
+선택적RAG: 처방형이면 위 그래프RAG, 그 외면 그냥LLM (유형 라우팅, 정답 미사용)
+```
+- 원본(`bigse0u1/`)은 Neo4j + Chroma(BGE-m3) 기반 4방식(그냥/벡터RAG/GraphRAG/보기Graph).
+- 확장(`graphrag/`)은 Neo4j 없이 순수 Python 그래프 조회로 재현 + 6모델 + 선택적RAG.
+- 디코딩 temperature 0(결정론적), 출력에서 `정답:N`/`N번`/독립숫자 견고 파싱.
+
+### 누수 방지 프로토콜
+
+| 구성 | 시험 문항/정답 사용 | 판정 |
 |---|---|---|
-| `한의학_문제.jsonl` | **학습용 메인.** 그림 비의존 순수 텍스트 문항 | 517 |
-| `한의학_문제_전체.jsonl` | 그림생략(70) 포함 전체 + 메타데이터 | 587 |
-| `한의학_문제_해설.jsonl` | 위에 `해설` 필드를 추가한 버전 *(생성 시)* | — |
-| `stats.json` | 회차·교시별 통계 | — |
-
-수집 회차: **제81회 한의사(2026)** 337문항 · **제27회 한약사(2026)** 250문항.
-
-**스키마**
-```jsonc
-// 한의학_문제.jsonl (메인)
-{"question": "...", "options": ["...","...","...","...","..."], "answer": 4, "answer_text": "..."}
-
-// 한의학_문제_전체.jsonl (메타 포함)
-{"source":"한의사_81회","교시":1,"과목":"내과학","번호":1,
- "question":"...","options":[...],"answer":4,"answer_text":"...","has_figure":false}
-
-// 한의학_문제_해설.jsonl (add_explanations.py 산출물)
-{... 위 필드 ..., "해설":"정답 4번은 ... 때문에 옳다. 2번은 ... 이유로 틀렸다."}
-```
-- `answer`: 정답 보기 번호(1~5). `answer_text`: 해당 보기 텍스트(100% 일치 검증 완료).
-- `has_figure`: 그림/도표 의존 문항 여부(텍스트만으로 풀 수 없는 70문항). 학습·평가에서 자동 제외.
+| 지식그래프·용어·청크 | 교과서·용어집으로 구축, 문항 무관 | ✅ |
+| 그냥LLM / 그래프RAG / 용어RAG / 선택적RAG | 테스트 시 문항만(정답 분리·미사용) | ✅ |
 
 ---
 
-## 🔄 전체 흐름
-
-```
-  dataset/한의학_문제_전체.jsonl(587문항)     cis.kiom.re.kr 표준한의학용어집
-                 │                                     │
-                 │                       scripts/fetch_terminology.py
-                 │                                     ▼
-                 │                         dataset/한의학_용어.jsonl(8.8k 용어)
-                 │                                     │
-                 ▼                                     ▼
-            evaluate.py  ◄──── rag.py(문제에 용어 주입, 무료) ────┐  ③
-        (한국형·글로벌 채점)                                       │
-                 │                          (선택·유료) 파인튜닝 경로 │
-        ①② 로컬 vs 글로벌                  prepare_terminology.py    │
-           평균 정답률                       → finetune.py           │
-                 │                          → ft:...:hani-term ──────┘
-                 ▼  ④
-            report.py → results/report.md (전후 비교·향상 Δ)
-```
-
-①②③④ 는 위 "실험 순서"에 대응. 기본 경로는 ③에서 **RAG 주입(무료)**.
-
----
-
-## 🚀 빠른 시작 (무료 RAG 경로)
+## 🚀 빠른 시작 / 재현
 
 ```bash
-# 0) 의존성
-pip install -r requirements.txt
-cp .env.example .env          # (무료 경로는 OpenAI 키 불필요)
+pip install -r requirements.txt        # 용어RAG 평가용
+ollama pull qwen2.5:7b ; ollama pull exaone3.5:7.8b   # 로컬 모델(D: 권장: OLLAMA_MODELS=D:\ollama-models)
 
-# 1) 로컬 모델 2종 준비 — Ollama (https://ollama.com)
-ollama pull exaone3.5:7.8b    # 한국형(LOCAL_MODEL)
-ollama pull qwen2.5:7b        # 글로벌 범용(GLOBAL_MODEL)
-#   디스크가 빠듯하면 모델 경로를 다른 드라이브로: OLLAMA_MODELS=D:\ollama-models
+# ── 용어 RAG (training/) ── 용어 인덱스는 dataset/한의학_용어.jsonl 에 포함됨
+python training/evaluate.py --all                     # 한국형·글로벌 base + 글로벌 +용어RAG (전체 517)
+python training/evaluate.py --all --rag-local         # 한국형에도 용어RAG 적용
+python training/report.py                             # → results/report.md
 
-# 2) KIOM 용어 수집(RAG 지식원)
-python scripts/fetch_terminology.py      # → dataset/한의학_용어.jsonl (V2.1 국문 ~8.8천)
+# ── GraphRAG (graphrag/) ──
+pip install -r graphrag/requirements_graphrag.txt
+python graphrag/build_evidence.py                     # 보기 처방 그래프 근거 생성(Neo4j 불요)
+python graphrag/run_all_models.py                     # 6모델 그냥/그래프/선택적RAG 순차 평가
+python graphrag/aggregate_models.py                   # → graphrag/MULTIMODEL_REPORT.md
 
-# 3) 평가 — 한국형·글로벌 base + 글로벌 RAG(용어 주입)
-python training/evaluate.py              # 검증셋(51문항)
-python training/evaluate.py --all        # 전체 텍스트 문항(517)
-
-# 4) 종합 리포트(전후 비교·향상 Δ)
-python training/report.py                # → results/report.md
-
-# (선택) 1~4 평가+리포트를 한 번에
-python training/run_all.py               # --all / --no-rag / --rag-local
+# (원본 Neo4j 파이프라인) graphrag/step1~4 또는 bigse0u1/ 참조
+python graphrag/step4_eval.py --rx-only --k 5 --seed 42
 ```
 
-> **유료 파인튜닝 경로**(OpenAI 권한 필요): `prepare_terminology.py` → `finetune.py --terminology`
-> 후 `.env` 의 `GPT4_FINETUNED_MODEL` 에 모델 ID 기입 → `evaluate.py` 재실행 → `report.py`.
-> `report.py` 가 RAG/파인튜닝 향상을 모두 표에 포함합니다.
-
 ---
 
-## 🧩 코드 구성 (`training/`)
-
-| 파일 | 역할 | 주요 옵션 |
-|---|---|---|
-| `config.py` | 경로·모델 ID·프롬프트·하이퍼파라미터 + **로컬/글로벌 클라이언트(`make_client`)** 중앙 관리 | — |
-| `prepare_data.py` | 기출 데이터셋 → OpenAI chat 포맷 변환 + train/val 분할 | `--with-rationale` |
-| `rag.py` | KIOM 용어 인덱스 → 문제에 등장하는 용어 **검색·주입**(한자 우선, 무료) | — |
-| `prepare_terminology.py` | KIOM **용어 → Q&A SFT** 변환(유료 파인튜닝용) | `--limit`, `--combine-exam` |
-| `add_explanations.py` | 정답 기반 **해설 생성**(재개 가능) → `한의학_문제_해설.jsonl` | `--limit`, `--skip-figure` |
-| `finetune.py` | 파일 업로드 → fine‑tuning job 생성 → 진행 모니터링 | `--model {gpt-4,gpt-5,all}`, `--terminology`, `--train-file` |
-| `evaluate.py` | **한국형·글로벌** 채점(역할/방식: base·**rag**·ft) + **평균·향상 Δ** | `--all`, `--no-rag`, `--rag-local`, `--models` |
-| `report.py` | results/ 종합 → **로컬 vs 글로벌·용어 주입 전후** 리포트(`results/report.md`) | — |
-| `run_all.py` | 실험 순서(①②③④) 오케스트레이터 | `--all`, `--no-rag`, `--rag-local` |
-
-> 로컬 모델은 `scripts/fetch_terminology.py`(KIOM 표준한의학용어집 수집)와 함께 동작합니다.
-> 용어 수집은 `cis.kiom.re.kr` 의 `search.do?term=%`(전체 반환)를 파싱해 V2.1·국문 ~8.8천 용어를 저장합니다.
-
-모든 모듈은 상단 docstring과 인라인 주석으로 동작/주의점을 설명합니다.
-
----
-
-## 🎓 파인튜닝 모드
-
-`prepare_data.py` 는 두 가지 학습 타깃을 만들 수 있습니다.
-
-| 모드 | 명령 | assistant 타깃 | 특징 |
-|---|---|---|---|
-| 번호만(기본) | `prepare_data.py` | `"4"` | 가볍고 빠름. 정답 선택만 학습 |
-| 해설 포함(CoT) | `prepare_data.py --with-rationale` | `"{해설}\n\n정답: 4"` | 근거를 먼저 쓰고 답을 내도록 학습. `한의학_문제_해설.jsonl` 필요 |
-
-> 해설 모드는 해설 파일이 없으면 자동으로 번호만 모드로 폴백합니다(경고 출력).
-
-학습/평가 데이터는 **고정 시드(42)** 로 분할되어, `evaluate.py` 의 검증셋과 정확히 동일합니다 →
-학습에 쓴 문항으로 평가하는 **데이터 누수(leakage)가 없습니다.**
-
----
-
-## ✍️ 해설 필드 생성
-
-원본 국시원 자료에는 해설이 없어 LLM으로 생성합니다. 단, **정답을 모델에 알려준 상태**에서
-"왜 그 답이 옳은지"를 서술하게 하여(모델이 직접 풀게 하지 않음) 사실 오류 위험을 낮춥니다.
+## 📁 프로젝트 구조
 
 ```bash
-python training/add_explanations.py --limit 5    # 먼저 5개로 품질 확인
-python training/add_explanations.py              # 전체 생성(재개 가능)
-```
-- **재개 가능**: 중간에 멈춰도 다시 실행하면 이미 만든 해설은 건너뛰고 이어서 생성.
-- 결과는 `dataset/한의학_문제_해설.jsonl` 에 저장되며, 이후 `prepare_data.py --with-rationale` 로 학습에 활용.
-- ⚠️ 생성 해설은 **참고용**입니다. 학습/배포 전 표본 검수를 권장합니다.
-
-> **본 프로젝트 실제 517 해설**은 위 스크립트와 같은 취지로 **Claude Opus 다중 에이전트 워크플로**가
-> 생성한 뒤, **2단계 다중 에이전트 적대 검증**(1차 → 2차 강화: 배치당 독립 리뷰어 2명 union)으로
-> **서로 다른 오류 문항 16건(중대 4)을 교정**했습니다(실측 정확도 ≈**96.9%**; 1차만으론 98.5%로 보였으나
-> 더 강한 검토에서 9건이 추가 발견됨 — 잔존 가능성 배제 불가). 상세 →
-> [해설_검증_리포트.md](dataset/해설_검증_리포트.md), 하니스 → `scripts/verify_explanations_*`.
-
----
-
-## 🤖 GitHub Actions 자동 평가
-
-`.github/workflows/evaluate.yml` — **수동 실행(workflow_dispatch)** 기반(API 비용 때문에 자동 트리거 OFF).
-
-**설정 1회**: 저장소 → Settings → Secrets and variables → Actions → **New repository secret**
-→ 이름 `OPENAI_API_KEY`, 값에 API 키 입력.
-
-**실행**: 저장소 **Actions** 탭 → *Evaluate (한의학 문제 정답률)* → **Run workflow**
-- `models`: 평가할 모델 ID(공백 구분), 예) `gpt-4o-2024-08-06 ft:gpt-4o-...:hani-exam:...`
-- `eval_all`: 전체 문항(true) / 검증셋만(false)
-
-결과는 **Artifacts(`eval-results`)** 로 다운로드되고, 요약은 워크플로 **Summary** 에 표로 표시됩니다.
-정기 평가가 필요하면 워크플로의 `schedule:` 주석을 해제하세요(비용 주의).
-
----
-
-## 💰 비용 가이드
-
-대략적인 호출 수(1회 실행 기준):
-
-| 작업 | API 호출 수 | 비고 |
-|---|---|---|
-| 검증셋 평가 | 모델당 ~51회 | 짧은 응답(번호) |
-| 전체 평가(`--all`) | 모델당 ~517회 | |
-| 해설 생성 | ~517~587회 | 응답이 길어 토큰 사용량 ↑ |
-| 파인튜닝 | 학습 토큰량 기반 과금 | 모델·에폭에 비례 |
-
-> 실제 비용은 모델 단가에 따라 다릅니다. 먼저 `--limit`/검증셋으로 소규모 확인 후 전체를 돌리세요.
-> 추론형 모델(gpt‑5/o‑계열)은 `reasoning_effort=low` 와 넉넉한 출력 토큰으로 평가합니다(빈 응답 방지).
-
----
-
-## 🛠 트러블슈팅
-
-| 증상 | 원인/해결 |
-|---|---|
-| `openai.AuthenticationError` | `.env` 의 `OPENAI_API_KEY` 누락/오타 |
-| 평가에서 정답이 전부 `None` | 추론형 모델인데 출력 토큰이 부족 → `config.EVAL_MAX_TOKENS_REASONING` 상향 |
-| 파인튜닝 `model not found / not fine-tunable` | 해당 모델 ID가 파인튜닝 미지원 → `.env` 의 모델 ID를 파인튜닝 가능 스냅샷으로 변경 |
-| GPT‑5 관련 파라미터 오류 | `config.REASONING_MODEL_HINTS` 로 추론형을 감지해 `temperature` 등을 자동 생략. 새 모델명은 힌트에 추가 |
-| 한글이 깨져 보임(콘솔) | 파일은 UTF‑8 정상. Windows 콘솔 표시 문제 → `chcp 65001` 또는 `PYTHONUTF8=1` |
-
----
-
-## 🔧 데이터 추출 파이프라인 (`scripts/`)
-
-국시원 PDF는 **텍스트가 전부 벡터(곡선)로 변환**되어(복사 방지) 일반 텍스트 추출이 불가 →
-**고해상도 렌더 + 비전 전사**가 유일한 방법. A3 한 페이지 통째로는 작은 한자가 뭉개지므로
-**2단 컬럼 타일링**(장변 ≤1980px)으로 가독성 확보. 사진·도표 문항은 국시원이 비공개 처리하여
-`[그림 생략]` 표기 후 메인 학습셋에서 제외.
-
-```powershell
-python scripts/discover.py --max-pages 30                 # 1) 게시물·첨부 탐색 → manifest.json
-python scripts/fetch_render.py --manifest manifest.json   # 2) PDF 다운로드 + 페이지 PNG 렌더
-python scripts/tile_render.py --pdf "..." --out "..."     # 3) 2단 컬럼 타일 분할
-python scripts/transcribe_api.py questions --slug ...      # 4) 비전 API 전사 (정답표 포함)
-python scripts/assemble.py                                # 5) 전사본 + 정답표 조인 → dataset/*.jsonl
-```
-
-> 게시판에는 **최신 회차만** 공개됩니다(과년도는 내려감). 새 회차가 올라오면 동일 파이프라인 재실행.
-> 원본 PDF/이미지(`raw/`, `img/`, `tiles/`)는 용량·저작권상 레포에서 제외됩니다.
-
-### 품질 메모
-- 587문항 전부 정답 매칭, 전부 보기 5개(정답누락 0 / 보기오류 0).
-- 비전 전사 특성상 일부 한자·작은 글씨에 국소적 오탈자 가능 → 학습 전 표본 검수 권장.
-
----
-
-## 📁 디렉터리
-```
-.
-├── .github/workflows/evaluate.yml   # 수동 실행 평가 워크플로
-├── dataset/                         # 최종 JSONL 데이터셋
-├── training/                        # 파인튜닝 + 평가 + 해설생성 코드
-│   ├── config.py
-│   ├── prepare_data.py
-│   ├── add_explanations.py
-│   ├── finetune.py
-│   ├── evaluate.py
-│   └── run_all.py
-├── scripts/                         # PDF→데이터셋 추출 파이프라인
-├── graphrag/                        # GraphRAG 트랙(정본): Neo4j+Chroma 처방 추천·평가
-├── bigse0u1/                        # ⚠️ graphrag/ 의 통합 전 원본 스냅샷(아카이브)
-├── requirements.txt
-├── .env.example
+KTM-LLM/ (main_1)
+├── training/          # 용어 RAG 실험
+│   ├── rag.py             # KIOM 용어 검색·주입(한자 우선, 무료·결정론적)
+│   ├── evaluate.py        # base / rag 채점, 평균·향상 Δ
+│   ├── config.py          # 경로·모델·프롬프트·하이퍼파라미터
+│   └── report.py          # results/ 종합 리포트
+├── graphrag/          # GraphRAG 실험(정본)
+│   ├── build_evidence.py · run_all_models.py · aggregate_models.py
+│   ├── step1~4_*.py       # 원본 Neo4j+Chroma 파이프라인
+│   ├── data/              # 지식그래프 노드·엣지·청크
+│   ├── PAPER_한의학_GraphRAG.md · MULTIMODEL_REPORT.md
+├── bigse0u1/          # 원본 GraphRAG 스냅샷(아카이브, github 브랜치 bigse0u1)
+├── dataset/           # 평가 문항 + KIOM 용어
+├── results/           # 모델별 평가 결과 JSON(원자료)
 └── README.md
 ```
 
-> **graphrag/ vs bigse0u1/**: 두 디렉터리는 같은 GraphRAG 작업의 두 버전이다.
-> **`graphrag/` 가 정본**(리팩터·보강 반영)이고, `bigse0u1/` 은 통합 전 원본 스냅샷(보존용)이다.
-> 실행·재현·인용은 `graphrag/` 를 사용한다.
+---
+
+## ⚠️ 한계
+
+- **그래프RAG는 처방형(n=86)에서만 효과** — 전체 평균으론 희석. 처방형 CI가 넓어 점추정은 지시적.
+- **증상→처방 검색 recall이 낮음**(원본 4.7%) — 그래서 보기 기반 조회(보기Graph/선택적RAG)가 핵심.
+- 지식그래프는 **내과 처방 중심** — 본초·침구·법규 등은 직접 근거가 없어 그냥LLM 사용.
+- **용어RAG 효과는 모델 한국어 능력·과목 의존**(순효과 작음, 일부 과목 역효과).
+- 단일 회차(한의사81·한약사27)·비전 전사 데이터의 드문 오탈자 가능.
+- 로컬 모델은 긴 근거 프롬프트에서 형식 이탈(번호 미출력) 일부 → 미파싱은 보수적으로 오답 처리.
+
+## 📑 출처
+
+표준한의학용어집(2006) · 한의대 내과학 교과서 처방 데이터(2024) · 팔강변증 한의표준임상진료지침(2023) ·
+국시원 공개 기출(한의사 제81회·한약사 제27회). 교육·연구 보조용이며 최종 진단·처방은 면허 한의사가 판단한다.

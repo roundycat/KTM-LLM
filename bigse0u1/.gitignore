@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+.env
+*.egg-info/
+dist/
+build/
+
+# Vector DB (generated, can be rebuilt with step2_build_vectordb.py)
+chroma_db/
+
+# IDE
+.vscode/
+.idea/
+*.DS_Store
+
+# Generated diagnostic/eval output files
+eval/diag_*.jsonl

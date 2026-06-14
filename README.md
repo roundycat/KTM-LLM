@@ -51,6 +51,8 @@
 | 외과학 | 2 | 0.0% | 0.0% | 0.0% |
 | 한약학 응용 | 1 | 0.0% | 0.0% | 0.0% |
 
+> 구조화 수치(출처·캐비엇 포함): [graphrag/eval_out/gpt-4o-mini_summary.json](graphrag/eval_out/gpt-4o-mini_summary.json)
+
 **로컬 모델 비교 (처방형 86, k=20):**
 
 | 모델 | 그냥 LLM | 벡터 RAG | GraphRAG |

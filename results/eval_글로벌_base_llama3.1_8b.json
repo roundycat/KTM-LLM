@@ -1,0 +1,4684 @@
+{
+  "model": "llama3.1:8b",
+  "provider": "local",
+  "role": "글로벌",
+  "rag": false,
+  "variant": "base",
+  "n": 517,
+  "correct": 177,
+  "accuracy": 0.3424,
+  "no_answer": 0,
+  "errored": 0,
+  "by_subject": {
+    "내과학1": 0.2576,
+    "내과학2": 0.1333,
+    "보건의약 관계 법규": 0.2667,
+    "보건의약관계법규": 0.3,
+    "본초학": 0.3077,
+    "부인과학": 0.1724,
+    "소아과학": 0.2381,
+    "신경정신과학": 0.4,
+    "안이비인후과학": 0.2,
+    "예방의학": 0.5455,
+    "외과학": 0.3333,
+    "침구학": 0.3636,
+    "한방생리학": 0.1875,
+    "한약학 응용": 0.3558,
+    "한의학 기초": 0.514
+  },
+  "details": [
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 3,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 4,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 6,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 7,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 1,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 5,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 8,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 2,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 9,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 10,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 11,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 12,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 13,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 14,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 15,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 16,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 17,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 18,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 19,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 20,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 21,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 22,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 25,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 26,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 27,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 29,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 30,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 31,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 32,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 33,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 34,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 35,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 36,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 37,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 38,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 39,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 40,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 41,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 42,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 43,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 44,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 45,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 46,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 47,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 48,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 51,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 52,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 53,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 54,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 55,
+      "gold": 3,
+      "pred": 5,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 56,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 57,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 59,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 62,
+      "gold": 1,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 64,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 67,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 68,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 69,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 70,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 72,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 74,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 75,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 77,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 78,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 79,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학1",
+      "번호": 80,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 1,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 2,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 3,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 4,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 5,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 6,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 7,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 8,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 9,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 10,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 11,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 12,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 13,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 14,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 15,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 16,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 17,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 18,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 19,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 21,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 22,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 23,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 25,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 26,
+      "gold": 5,
+      "pred": 1,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 27,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 28,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 29,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 30,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 31,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "내과학2",
+      "번호": 32,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 33,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 34,
+      "gold": 1,
+      "pred": 1,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 35,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 36,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 37,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 39,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 42,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 43,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 45,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 46,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 47,
+      "gold": 1,
+      "pred": 1,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 49,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 55,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 56,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 62,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 63,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 64,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 65,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 66,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 67,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 68,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 69,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 70,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 71,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 72,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 73,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 74,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 75,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 76,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 77,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 78,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 79,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "침구학",
+      "번호": 80,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 81,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 82,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 83,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 84,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 85,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 86,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 87,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 88,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 89,
+      "gold": 2,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 90,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 91,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 92,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 93,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 94,
+      "gold": 5,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 95,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 96,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 97,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 98,
+      "gold": 1,
+      "pred": 1,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 99,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "보건의약관계법규",
+      "번호": 100,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "외과학",
+      "번호": 1,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "외과학",
+      "번호": 2,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "외과학",
+      "번호": 4,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "외과학",
+      "번호": 7,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "외과학",
+      "번호": 11,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "외과학",
+      "번호": 14,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "신경정신과학",
+      "번호": 17,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "신경정신과학",
+      "번호": 18,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "신경정신과학",
+      "번호": 19,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "신경정신과학",
+      "번호": 20,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "신경정신과학",
+      "번호": 21,
+      "gold": 1,
+      "pred": 5,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "신경정신과학",
+      "번호": 22,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "신경정신과학",
+      "번호": 23,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "신경정신과학",
+      "번호": 24,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "신경정신과학",
+      "번호": 25,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "신경정신과학",
+      "번호": 26,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "신경정신과학",
+      "번호": 27,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "신경정신과학",
+      "번호": 28,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "신경정신과학",
+      "번호": 29,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "신경정신과학",
+      "번호": 30,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "신경정신과학",
+      "번호": 32,
+      "gold": 3,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "안이비인후과학",
+      "번호": 36,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "안이비인후과학",
+      "번호": 39,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "안이비인후과학",
+      "번호": 40,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "안이비인후과학",
+      "번호": 43,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "안이비인후과학",
+      "번호": 45,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 49,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 50,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 51,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 52,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 53,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 54,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 55,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 56,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 57,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 58,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 59,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 60,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 61,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 62,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 64,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 65,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 66,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 67,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 68,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 71,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 72,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 73,
+      "gold": 3,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 74,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 75,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 76,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 77,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 78,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 79,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "부인과학",
+      "번호": 80,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 1,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 2,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 3,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 4,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 5,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 7,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 8,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 9,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 10,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 11,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 12,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 13,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 14,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 15,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 16,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 17,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 19,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 22,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 23,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 24,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "소아과학",
+      "번호": 25,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 26,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 27,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 28,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 29,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 30,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 31,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 33,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 34,
+      "gold": 5,
+      "pred": 5,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 35,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 36,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 37,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 38,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 39,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 40,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 41,
+      "gold": 3,
+      "pred": 1,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 42,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 43,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 44,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 45,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 46,
+      "gold": 1,
+      "pred": 1,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 47,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "예방의학",
+      "번호": 48,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "한방생리학",
+      "번호": 49,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "한방생리학",
+      "번호": 50,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "한방생리학",
+      "번호": 51,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "한방생리학",
+      "번호": 52,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "한방생리학",
+      "번호": 53,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "한방생리학",
+      "번호": 54,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "한방생리학",
+      "번호": 55,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "한방생리학",
+      "번호": 56,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "한방생리학",
+      "번호": 57,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "한방생리학",
+      "번호": 58,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "한방생리학",
+      "번호": 59,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "한방생리학",
+      "번호": 60,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "한방생리학",
+      "번호": 61,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "한방생리학",
+      "번호": 62,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "한방생리학",
+      "번호": 63,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "한방생리학",
+      "번호": 64,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "본초학",
+      "번호": 66,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "본초학",
+      "번호": 67,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "본초학",
+      "번호": 68,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "본초학",
+      "번호": 69,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "본초학",
+      "번호": 71,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "본초학",
+      "번호": 72,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "본초학",
+      "번호": 73,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "본초학",
+      "번호": 74,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "본초학",
+      "번호": 75,
+      "gold": 3,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "본초학",
+      "번호": 76,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "본초학",
+      "번호": 78,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "본초학",
+      "번호": 79,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한의사_81회",
+      "과목": "본초학",
+      "번호": 80,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 1,
+      "gold": 4,
+      "pred": 1,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 2,
+      "gold": 2,
+      "pred": 1,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 3,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 4,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 5,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 6,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 7,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 8,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 9,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 10,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 11,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 12,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 13,
+      "gold": 1,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 14,
+      "gold": 1,
+      "pred": 1,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 15,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 16,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 17,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 18,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 19,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 20,
+      "gold": 1,
+      "pred": 1,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 21,
+      "gold": 2,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 22,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 23,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 24,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 25,
+      "gold": 1,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 26,
+      "gold": 3,
+      "pred": 5,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 27,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 28,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 29,
+      "gold": 3,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 30,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 31,
+      "gold": 4,
+      "pred": 1,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 32,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 33,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 34,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 35,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 36,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 37,
+      "gold": 2,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 38,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 39,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 40,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 41,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 44,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 46,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 47,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 48,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 49,
+      "gold": 5,
+      "pred": 5,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 50,
+      "gold": 1,
+      "pred": 1,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 51,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 52,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 53,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 54,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 55,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 56,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 57,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 58,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 59,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 60,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 61,
+      "gold": 3,
+      "pred": 5,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 62,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 63,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 64,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 65,
+      "gold": 5,
+      "pred": 5,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 66,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 67,
+      "gold": 1,
+      "pred": 1,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 68,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 69,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 70,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 71,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 72,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 73,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 74,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 75,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 76,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 77,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 78,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 79,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 80,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 81,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 82,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 83,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 84,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 85,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 86,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 87,
+      "gold": 5,
+      "pred": 5,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 88,
+      "gold": 1,
+      "pred": 1,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 89,
+      "gold": 5,
+      "pred": 5,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 90,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 91,
+      "gold": 5,
+      "pred": 5,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 92,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 93,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 94,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 95,
+      "gold": 1,
+      "pred": 1,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 96,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 97,
+      "gold": 1,
+      "pred": 1,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 98,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 99,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 100,
+      "gold": 5,
+      "pred": 5,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 101,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 102,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 103,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 104,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 105,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 106,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 107,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 108,
+      "gold": 5,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 109,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한의학 기초",
+      "번호": 110,
+      "gold": 1,
+      "pred": 1,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 111,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 112,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 113,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 114,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 115,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 116,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 117,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 118,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 119,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 120,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 121,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 122,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 123,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 124,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 125,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 126,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 127,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 128,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 129,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 130,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 131,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 132,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 133,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 134,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 135,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 136,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 137,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 138,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 139,
+      "gold": 4,
+      "pred": 1,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "보건의약 관계 법규",
+      "번호": 140,
+      "gold": 3,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 1,
+      "gold": 5,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 2,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 3,
+      "gold": 2,
+      "pred": 1,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 4,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 5,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 6,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 7,
+      "gold": 5,
+      "pred": 5,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 8,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 9,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 10,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 11,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 12,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 13,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 14,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 15,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 16,
+      "gold": 4,
+      "pred": 1,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 17,
+      "gold": 5,
+      "pred": 1,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 18,
+      "gold": 4,
+      "pred": 5,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 19,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 20,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 21,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 22,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 23,
+      "gold": 1,
+      "pred": 1,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 24,
+      "gold": 1,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 25,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 26,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 27,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 28,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 29,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 30,
+      "gold": 3,
+      "pred": 5,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 31,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 32,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 33,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 34,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 35,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 36,
+      "gold": 3,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 37,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 38,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 39,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 40,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 41,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 42,
+      "gold": 5,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 43,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 44,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 45,
+      "gold": 3,
+      "pred": 1,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 46,
+      "gold": 1,
+      "pred": 5,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 47,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 48,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 49,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 50,
+      "gold": 5,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 51,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 52,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 53,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 54,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 55,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 56,
+      "gold": 5,
+      "pred": 5,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 57,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 58,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 59,
+      "gold": 3,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 60,
+      "gold": 1,
+      "pred": 1,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 61,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 63,
+      "gold": 2,
+      "pred": 1,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 64,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 65,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 66,
+      "gold": 4,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 67,
+      "gold": 2,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 68,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 69,
+      "gold": 4,
+      "pred": 1,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 70,
+      "gold": 3,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 71,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 72,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 73,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 74,
+      "gold": 1,
+      "pred": 5,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 75,
+      "gold": 5,
+      "pred": 1,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 76,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 77,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 78,
+      "gold": 5,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 79,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 80,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 81,
+      "gold": 1,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 82,
+      "gold": 2,
+      "pred": 1,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 83,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 84,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 85,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 86,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 87,
+      "gold": 5,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 88,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 89,
+      "gold": 2,
+      "pred": 5,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 90,
+      "gold": 1,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 91,
+      "gold": 5,
+      "pred": 3,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 97,
+      "gold": 5,
+      "pred": 5,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 98,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 99,
+      "gold": 1,
+      "pred": 1,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 100,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 101,
+      "gold": 2,
+      "pred": 4,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 102,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 103,
+      "gold": 2,
+      "pred": 2,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 104,
+      "gold": 5,
+      "pred": 5,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 105,
+      "gold": 4,
+      "pred": 4,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 106,
+      "gold": 5,
+      "pred": 5,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 107,
+      "gold": 1,
+      "pred": 1,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 108,
+      "gold": 4,
+      "pred": 2,
+      "correct": false,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 109,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    },
+    {
+      "source": "한약사_27회",
+      "과목": "한약학 응용",
+      "번호": 110,
+      "gold": 3,
+      "pred": 3,
+      "correct": true,
+      "error": null
+    }
+  ]
+}

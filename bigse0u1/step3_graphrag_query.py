@@ -1,0 +1,258 @@
+"""
+step3_graphrag_query.py — 그래프 RAG 핵심.
+질문 → (1)증상 추출 → (2)Neo4j 경로검색 + (3)Chroma 본문검색 → (4)LLM 답변(근거·출처).
+
+사용:
+  export NEO4J_URI=... NEO4J_USER=... NEO4J_PW=...
+  # 답변 LLM 선택 (둘 중 하나)
+  export LLM_PROVIDER=ollama   LLM_MODEL=qwen2.5
+  export LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=...   # (LLM_MODEL 기본 claude-sonnet-4-6)
+  python step3_graphrag_query.py "가슴이 두근거리고 쉽게 피로해요"
+"""
+import os, sys, json, functools
+from neo4j import GraphDatabase
+import chromadb
+from sentence_transformers import SentenceTransformer
+
+NEO4J = (os.environ.get("NEO4J_URI", "bolt://localhost:7687"),
+         os.environ.get("NEO4J_USER", "neo4j"),
+         os.environ.get("NEO4J_PW", "neo4j"))
+EMB_MODEL = "BAAI/bge-m3"
+DB_PATH = "./chroma_db"
+COLL_RX          = "hani_rx"           # 처방 청크 (원본 — GraphRAG용)
+COLL_RX_CLINICAL = "hani_rx_clinical"  # 임상 설명 청크 (벡터 RAG용)
+COLL_TERM        = "hani_term"         # 용어 청크
+
+# ---------- 공통 리소스 ----------
+@functools.lru_cache(maxsize=1)
+def emb_model(): return SentenceTransformer(EMB_MODEL)
+
+@functools.lru_cache(maxsize=1)
+def _chroma_client():
+    return chromadb.PersistentClient(path=DB_PATH)
+
+def chroma(coll=COLL_RX):
+    return _chroma_client().get_collection(coll)
+
+@functools.lru_cache(maxsize=1)
+def driver(): return GraphDatabase.driver(NEO4J[0], auth=(NEO4J[1], NEO4J[2]))
+
+@functools.lru_cache(maxsize=1)
+def name_index():
+    """질문에서 증상/변증명을 찾기 위한 이름→id 사전."""
+    idx = []
+    for l in open("data/kg_all_nodes.jsonl", encoding="utf-8"):
+        n = json.loads(l)
+        if n["type"] in ("증상", "변증") and len(n.get("name_ko", "")) >= 2:
+            idx.append((n["name_ko"], n["id"]))
+    return idx
+
+# 한국어 종결어미·일반어와 충돌하는 증상 표면형 — 매칭에서 제외
+STOP_NAMES = {"한다"}   # SY-0410 汗多: '한다'가 종결어미 '~한다'와 충돌
+
+@functools.lru_cache(maxsize=1)
+def _symptom_nodes_and_texts():
+    nodes, texts = [], []
+    for l in open("data/kg_all_nodes.jsonl", encoding="utf-8"):
+        n = json.loads(l)
+        if n["type"] in ("증상", "변증") and len(n.get("name_ko", "")) >= 2:
+            nodes.append(n)
+            desc = n.get("일반인설명", "")
+            texts.append(n["name_ko"] + (" " + desc if desc else ""))
+    return nodes, texts
+
+@functools.lru_cache(maxsize=1)
+def _symptom_embeddings():
+    import numpy as np
+    nodes, texts = _symptom_nodes_and_texts()
+    embs = emb_model().encode(texts, normalize_embeddings=True,
+                               batch_size=256, show_progress_bar=False)
+    return nodes, np.array(embs)
+
+def extract_seeds_vector(question, top_k=10, threshold=0.25):
+    """BGE-m3 유사도로 증상 노드 seed 추출 — LLM 번역 불필요."""
+    import numpy as np
+    nodes, node_embs = _symptom_embeddings()
+    q_emb = emb_model().encode([question], normalize_embeddings=True)
+    sims = (node_embs @ q_emb.T).squeeze()
+    top_idx = sims.argsort()[::-1][:top_k]
+    seeds, names, seen = [], [], set()
+    for i in top_idx:
+        if float(sims[i]) < threshold:
+            break
+        nid = nodes[i]["id"]
+        if nid not in seen:
+            seeds.append(nid); names.append(nodes[i]["name_ko"]); seen.add(nid)
+    return seeds, names
+
+# ---------- (1) 증상/변증 추출 ----------
+def extract_seeds(question):
+    """질문 텍스트에서 그래프 노드 이름과 직접 매칭 (한의학 시험 문어체에 적합)."""
+    seeds, names = [], []
+    seen = set()
+    for nm, nid in name_index():
+        if nm in STOP_NAMES:
+            continue
+        if nm in question and nid not in seen:
+            seeds.append(nid); names.append(nm); seen.add(nid)
+    return seeds, names
+
+EXTRACT_PROMPT = """다음 질문에서 한의학 증상·병증·변증에 해당하는 용어를 추출하세요.
+한의학 교과서 표현으로, 쉼표로만 구분해 출력하세요. 없으면 빈 문자열만 출력.
+예) 심계항진, 기허, 음허화동
+
+질문: {q}
+한의학 용어:"""
+
+def extract_seeds_llm(question):
+    """LLM으로 구어체 → 한의학 용어 변환 후 그래프 노드 매칭 (구어체 질문에 적합)."""
+    raw = call_llm(EXTRACT_PROMPT.format(q=question)).strip()
+    if not raw:
+        return [], []
+    terms = [t.strip() for t in raw.replace("，", ",").split(",") if t.strip()]
+    idx = name_index()
+    seeds, names = [], []
+    seen = set()
+    for term in terms:
+        for nm, nid in idx:
+            if (term in nm or nm in term) and nid not in seen:
+                seeds.append(nid); names.append(nm); seen.add(nid)
+    # LLM 추출 실패 시 원본 텍스트 직접 매칭으로 fallback
+    if not seeds:
+        return extract_seeds(question)
+    return seeds, names
+
+# ---------- (2) 그래프 검색 ----------
+GRAPH_Q = """
+MATCH (p:Node {label:'처방'})-[:REL {type:'주치'}]->(s:Node)
+WHERE s.id IN $seeds
+WITH p, collect(DISTINCT s.name_ko) AS matched, count(DISTINCT s) AS score
+ORDER BY score DESC LIMIT 6
+MATCH (p)-[:REL {type:'구성'}]->(h:Node)
+RETURN p.name_ko AS 처방, p.name_hanja AS 한자, p.계통 AS 계통,
+       matched, collect(h.name_ko) AS 약재, score
+"""
+def graph_retrieve(seeds):
+    if not seeds: return []
+    with driver().session() as s:
+        return [r.data() for r in s.run(GRAPH_Q, seeds=seeds)]
+
+# ---------- (3) 본문(벡터) 검색 ----------
+def vector_retrieve(question, k=5, coll=COLL_RX):
+    q = emb_model().encode([question], normalize_embeddings=True).tolist()
+    res = chroma(coll).query(query_embeddings=q, n_results=k)
+    return list(zip(res["ids"][0], res["documents"][0]))
+
+def vector_retrieve_with_meta(question, k=5, coll=COLL_RX_CLINICAL):
+    """메타데이터 포함 벡터 검색 — GraphRAG v2용."""
+    q = emb_model().encode([question], normalize_embeddings=True).tolist()
+    res = chroma(coll).query(query_embeddings=q, n_results=k,
+                             include=["documents", "metadatas"])
+    return list(zip(res["documents"][0], res["metadatas"][0]))
+
+# ---------- (2b) 처방명으로 그래프 상세 조회 ----------
+GRAPH_BY_NAME_Q = """
+UNWIND $names AS nm
+MATCH (p:Node {label:'처방', name_ko: nm})
+OPTIONAL MATCH (p)-[:REL {type:'구성'}]->(h:Node)
+OPTIONAL MATCH (p)-[:REL {type:'주치'}]->(s:Node)
+RETURN p.name_ko AS 처방, p.name_hanja AS 한자, p.계통 AS 계통,
+       collect(DISTINCT h.name_ko)[0..8] AS 약재,
+       collect(DISTINCT s.name_ko)[0..6] AS 주치
+"""
+def graph_retrieve_by_name(rx_names):
+    """임상 벡터 검색으로 찾은 처방명 → Neo4j 상세 조회."""
+    if not rx_names: return []
+    with driver().session() as s:
+        return [r.data() for r in s.run(GRAPH_BY_NAME_Q, names=rx_names)]
+
+# ---------- (4) LLM 호출 ----------
+def call_llm(prompt):
+    prov = os.environ.get("LLM_PROVIDER", "ollama")
+    if prov == "anthropic":
+        import anthropic
+        m = os.environ.get("LLM_MODEL", "claude-sonnet-4-6")
+        r = anthropic.Anthropic().messages.create(
+            model=m, max_tokens=900, temperature=0,
+            messages=[{"role": "user", "content": prompt}])
+        return r.content[0].text
+    if prov == "openai":
+        from openai import OpenAI
+        m = os.environ.get("LLM_MODEL", "gpt-4o-mini")
+        r = OpenAI().chat.completions.create(
+            model=m, temperature=0, messages=[{"role": "user", "content": prompt}])
+        return r.choices[0].message.content
+    if prov == "groq":
+        from openai import OpenAI
+        m = os.environ.get("LLM_MODEL", "llama-3.1-8b-instant")
+        r = OpenAI(base_url="https://api.groq.com/openai/v1",
+                   api_key=os.environ["GROQ_API_KEY"]).chat.completions.create(
+            model=m, temperature=0, messages=[{"role": "user", "content": prompt}])
+        return r.choices[0].message.content
+    # 기본: Ollama (로컬·무료)
+    import requests
+    m = os.environ.get("LLM_MODEL", "qwen2.5")
+    r = requests.post("http://localhost:11434/api/generate",
+                      json={"model": m, "prompt": prompt, "stream": False,
+                            "options": {"temperature": 0}}, timeout=180)
+    return r.json().get("response", "")
+
+# ---------- 근거 조립 + 답변 ----------
+def build_context_v2(graph_rows, clinical_chunks):
+    """GraphRAG v2: 임상 벡터 → 처방 후보 → 그래프 상세 보강."""
+    lines = []
+    if graph_rows:
+        lines.append("[처방 상세 정보]")
+        for g in graph_rows:
+            계통 = g.get("계통") or ""
+            주치 = ", ".join(g.get("주치") or [])
+            약재 = ", ".join(g.get("약재") or [])
+            lines.append(f"- {g['처방']}({g['한자']}) [{계통}] "
+                         f"| 주치: {주치} | 구성: {약재}")
+    if clinical_chunks:
+        lines.append("\n[임상 적응 설명]")
+        for doc, _ in clinical_chunks:
+            lines.append(f"- {doc[:300]}")
+    return "\n".join(lines)
+
+def build_context(graph_rows, chunks):
+    lines = []
+    if graph_rows:
+        lines.append("[그래프 근거: 증상에 부합하는 처방]")
+        for g in graph_rows:
+            lines.append(f"- {g['처방']}({g['한자']}) [{g['계통']}내과] "
+                         f"| 부합 증상: {', '.join(g['matched'])} "
+                         f"| 구성: {', '.join(g['약재'][:8])}")
+    if chunks:
+        lines.append("\n[본문 근거]")
+        for cid, doc in chunks:
+            lines.append(f"- {doc}")
+    return "\n".join(lines)
+
+PROMPT = """당신은 한의학 지식베이스를 활용하는 보조 도우미입니다.
+아래 '근거'에 있는 정보만으로 한국어로 답하세요. 
+근거가 문제와 무관하면 무시하고 네 지식으로 답하라.
+가능한 처방 후보와 그 근거(부합 증상·구성)를 제시하고,
+처방 후보와 함께 ① 침구 치료(혈위), ② 식이·생활 관리를 함께 제시하세요.
+ 마지막에 "※ 본 답변은 참고용이며 최종 진단·처방은 면허 한의사가 판단해야 합니다."를 덧붙이세요.
+
+[환자 질문]
+{q}
+
+[근거]
+{ctx}
+"""
+def answer(question):
+    seeds, names = extract_seeds_llm(question)
+    g = graph_retrieve(seeds)
+    c = vector_retrieve(question, k=5)
+    ctx = build_context(g, c)
+    out = call_llm(PROMPT.format(q=question, ctx=ctx))
+    return out, names, g
+
+if __name__ == "__main__":
+    q = sys.argv[1] if len(sys.argv) > 1 else "가슴이 두근거리고 쉽게 피로해요"
+    ans, names, g = answer(q)
+    print("● 추출된 증상/변증:", names)
+    print("● 그래프 처방 후보:", [r["처방"] for r in g])
+    print("\n● 답변:\n" + ans)

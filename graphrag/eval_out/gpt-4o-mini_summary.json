@@ -1,0 +1,67 @@
+{
+  "model": "gpt-4o-mini",
+  "provider": "openai",
+  "rx_only": true,
+  "n_rx": 86,
+  "pipeline": "bigse0u1 원본 GraphRAG (Neo4j + Chroma, seed 벡터화). 로컬 grageval(보기Graph 근거) 파이프라인과 방식이 달라 grageval_*.json 과 같은 표/aggregate 로 직접 비교하지 말 것.",
+  "caveat": "요약 수치만 존재한다(per-문항 원시데이터 없음). 최종 seed-벡터화 런은 grageval_*.json 같은 문항별 예측 파일이 남아있지 않다. 모델명은 문서 기준 추정 — experiment.txt 로그에는 모델명이 명시되어 있지 않다. 값은 출처 표/로그에서 그대로 옮긴 것이며 새로 생성하지 않았다.",
+  "metric": "정답률(0~1). recall_at_ctx = 처방형 문항에서 정답 처방명이 검색 근거에 포함된 비율.",
+  "final": {
+    "k": 20,
+    "plain": 0.302,
+    "vector_rag": 0.384,
+    "graphrag": 0.430,
+    "recall_at_ctx": 0.128,
+    "source": "bigse0u1/README.md · graphrag/README_graphrag.md (최종 결과 표)"
+  },
+  "stagewise": [
+    {
+      "stage": "초기 (k=5)",
+      "change": "—",
+      "plain": 0.302,
+      "vector_rag": 0.291,
+      "graphrag": 0.314,
+      "recall_at_ctx": 0.047
+    },
+    {
+      "stage": "임상청크 재작성 + k=20",
+      "change": "symptom-first 청크, k 확대",
+      "plain": 0.302,
+      "vector_rag": 0.372,
+      "graphrag": 0.302,
+      "recall_at_ctx": 0.070
+    },
+    {
+      "stage": "누락처방 추가 + seed 벡터화",
+      "change": "24개 처방 보완, LLM 번역 → 벡터 추출",
+      "plain": 0.302,
+      "vector_rag": 0.384,
+      "graphrag": 0.430,
+      "recall_at_ctx": 0.128
+    }
+  ],
+  "by_subject_rx": {
+    "내과학1": { "n": 36, "plain": 0.306, "vector_rag": 0.500, "graphrag": 0.528 },
+    "부인과학": { "n": 16, "plain": 0.312, "vector_rag": 0.375, "graphrag": 0.250 },
+    "내과학2": { "n": 15, "plain": 0.333, "vector_rag": 0.200, "graphrag": 0.400 },
+    "소아과학": { "n": 8, "plain": 0.375, "vector_rag": 0.375, "graphrag": 0.625 },
+    "신경정신과학": { "n": 5, "plain": 0.200, "vector_rag": 0.400, "graphrag": 0.400 },
+    "안이비인후과학": { "n": 3, "plain": 0.333, "vector_rag": 0.333, "graphrag": 0.333 },
+    "외과학": { "n": 2, "plain": 0.0, "vector_rag": 0.0, "graphrag": 0.0 },
+    "한약학 응용": { "n": 1, "plain": 0.0, "vector_rag": 0.0, "graphrag": 0.0 }
+  },
+  "early_runs_81q": {
+    "note": "graphrag/eval/experiment.txt 의 구버전 탐색 로그(처방형 81문항). 최종 86문항 시스템과 다른 단계라 final/stagewise 와 수치가 다르다. 참고용.",
+    "n_rx": 81,
+    "runs": [
+      { "k": "default", "plain": 0.247, "vector_rag": 0.309, "graphrag": 0.370 },
+      { "k": 5, "plain": 0.272, "vector_rag": 0.272, "graphrag": 0.272 },
+      { "k": 10, "plain": 0.321, "vector_rag": 0.309, "graphrag": 0.333 }
+    ]
+  },
+  "sources": [
+    "graphrag/eval/experiment.txt",
+    "bigse0u1/README.md",
+    "graphrag/README_graphrag.md"
+  ]
+}

@@ -25,8 +25,14 @@ API 키 설정 (사용할 모델에 맞게 환경변수 설정):
     (litellm이 모델 문자열을 보고 자동으로 알맞은 키를 사용합니다)
 
 실행 예:
-    python tkm_pipeline.py --model gpt-4o --data sample_questions.json --stage 5 --n-trials 7
-    python tkm_pipeline.py --model claude-sonnet-4-6 --data sample_questions.json --stage 4
+    python tkm_pipeline.py --model gpt-4o --data KTM_data/2025.json --stage 5 --n-trials 7
+    python tkm_pipeline.py --model claude-sonnet-4-6 --data KTM_data/2025.json --stage 4
+
+vLLM 등으로 로컬/자체 호스팅한 OpenAI 호환 서버를 쓰고 싶을 때:
+    vllm serve Qwen/Qwen2.5-7B-Instruct --port 8000
+    python tkm_pipeline.py --model openai/Qwen/Qwen2.5-7B-Instruct \
+        --api-base http://localhost:8000/v1 --api-key sk-dummy \
+        --data KTM_data/2025.json --stage 5 --n-trials 7 --max-workers 7
 """
 
 from __future__ import annotations
@@ -36,6 +42,7 @@ import json
 import re
 import sys
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -55,7 +62,7 @@ class Question:
     subject: str
     question_kr: str
     choices_kr: list[str]
-    correct_answer: int  # 1-indexed, matches paper's 5-choice format
+    correct_answer: int  # 1-indexed (choices_kr 개수에 맞게 4지선다는 1~4, 5지선다는 1~5)
     # TKM 용어 -> 한자 매핑. 예: {"기허": "氣虛", "어혈": "瘀血"}
     tkm_terms: dict[str, str] = field(default_factory=dict)
 
@@ -68,8 +75,15 @@ class Question:
 # 2. LLM call wrapper (다양한 모델 지원)
 # --------------------------------------------------------------------------- #
 
-def call_llm(model: str, system: str, user: str, temperature: float = 1.0) -> str:
-    """litellm을 통해 어떤 provider의 모델이든 동일하게 호출."""
+def call_llm(
+    model: str, system: str, user: str, temperature: float = 1.0,
+    api_base: Optional[str] = None, api_key: Optional[str] = None,
+) -> str:
+    """litellm을 통해 어떤 provider의 모델이든 동일하게 호출.
+
+    api_base를 지정하면 vLLM 등 자체 호스팅한 OpenAI 호환 서버를 사용한다
+    (이때 model은 보통 "openai/<served-model-name>" 형태).
+    """
     if completion is None:
         raise RuntimeError(
             "litellm이 설치되어 있지 않습니다. `pip install litellm` 을 실행하세요."
@@ -82,6 +96,8 @@ def call_llm(model: str, system: str, user: str, temperature: float = 1.0) -> st
         ],
         temperature=temperature,
         max_tokens=1500,
+        api_base=api_base,
+        api_key=api_key,
     )
     return resp["choices"][0]["message"]["content"]
 
@@ -112,18 +128,25 @@ TRANSLATE_SYSTEM = (
 )
 
 
-def translate_to_english(text: str, model: str) -> str:
-    return call_llm(model=model, system=TRANSLATE_SYSTEM, user=text, temperature=0.0)
+def translate_to_english(
+    text: str, model: str, api_base: Optional[str] = None, api_key: Optional[str] = None,
+) -> str:
+    return call_llm(
+        model=model, system=TRANSLATE_SYSTEM, user=text, temperature=0.0,
+        api_base=api_base, api_key=api_key,
+    )
 
 
-def get_translated_question(q: Question, model: str) -> tuple[str, list[str]]:
+def get_translated_question(
+    q: Question, model: str, api_base: Optional[str] = None, api_key: Optional[str] = None,
+) -> tuple[str, list[str]]:
     """문제/보기를 번역하고 캐시. 이미 번역돼 있으면 재사용."""
     if q._question_en is None:
-        q._question_en = translate_to_english(q.question_kr, model)
+        q._question_en = translate_to_english(q.question_kr, model, api_base=api_base, api_key=api_key)
     if q._choices_en is None:
         # 보기 5개를 한 번에 번역 (번호 유지)
         joined = "\n".join(f"{i+1}. {c}" for i, c in enumerate(q.choices_kr))
-        translated_joined = translate_to_english(joined, model)
+        translated_joined = translate_to_english(joined, model, api_base=api_base, api_key=api_key)
         # 파싱: "1. ..." 형태 라인을 추출
         lines = [l.strip() for l in translated_joined.splitlines() if l.strip()]
         parsed = []
@@ -147,7 +170,7 @@ BASE_INSTRUCTION_KR = (
 
 EXAM_OPTIMIZED_INSTRUCTION_EN = (
     "You are taking the Korean National Licensing Examination for Korean "
-    "Medicine Doctors. Read the question and the five answer choices "
+    "Medicine Doctors. Read the question and the answer choices "
     "carefully. Reason step by step, considering the relevant Traditional "
     "Korean Medicine (TKM) knowledge needed. After your reasoning, you MUST "
     "select exactly ONE choice as your final answer. "
@@ -156,7 +179,10 @@ EXAM_OPTIMIZED_INSTRUCTION_EN = (
 )
 
 
-def build_prompt(q: Question, stage: int, model_for_translation: str) -> tuple[str, str]:
+def build_prompt(
+    q: Question, stage: int, model_for_translation: str,
+    api_base: Optional[str] = None, api_key: Optional[str] = None,
+) -> tuple[str, str]:
     """
     stage 0: 원문 그대로, 한글 지시문
     stage 1: + 한자 병기
@@ -182,7 +208,9 @@ def build_prompt(q: Question, stage: int, model_for_translation: str) -> tuple[s
         )
 
     if stage >= 3:
-        en_q, en_choices = get_translated_question(q, model_for_translation)
+        en_q, en_choices = get_translated_question(
+            q, model_for_translation, api_base=api_base, api_key=api_key
+        )
         # 영어 번역본을 쓰되, 한자 병기(stage1)는 이미 원문에 반영되어 있으므로
         # 번역 함수가 괄호 안 한자를 보존하도록 프롬프트에 명시되어 있음.
         question_text, choices = en_q, en_choices
@@ -237,15 +265,15 @@ def extract_answer(response: str) -> Optional[int]:
 # --------------------------------------------------------------------------- #
 
 def run_single_trial(
-    q: Question, model: str, stage: int, translation_model: Optional[str] = None,
-    max_retries: int = 3,
+    model: str, system_prompt: str, user_prompt: str, max_retries: int = 3,
+    api_base: Optional[str] = None, api_key: Optional[str] = None,
 ) -> Optional[int]:
     """한 번의 시행. 거부 응답이면 재시도(논문 방식)."""
-    translation_model = translation_model or model
-    system_prompt, user_prompt = build_prompt(q, stage, translation_model)
-
     for _ in range(max_retries):
-        response = call_llm(model=model, system=system_prompt, user=user_prompt)
+        response = call_llm(
+            model=model, system=system_prompt, user=user_prompt,
+            api_base=api_base, api_key=api_key,
+        )
         if is_refusal(response):
             continue  # 논문처럼 거부 응답은 버리고 재시도
         return extract_answer(response)
@@ -253,13 +281,26 @@ def run_single_trial(
 
 
 def run_self_consistency(
-    q: Question, model: str, n_trials: int = 7, translation_model: Optional[str] = None,
+    system_prompt: str, user_prompt: str, model: str, n_trials: int = 7,
+    api_base: Optional[str] = None, api_key: Optional[str] = None,
+    max_workers: int = 4,
 ) -> tuple[Optional[int], list[Optional[int]]]:
-    """stage 4 프롬프트로 N회 독립 시행 후 다수결(최빈값)로 최종 답 결정."""
-    answers = [
-        run_single_trial(q, model, stage=4, translation_model=translation_model)
-        for _ in range(n_trials)
-    ]
+    """stage 4 프롬프트로 N회 독립 시행(병렬)을 돌린 뒤 다수결(최빈값)로 최종 답 결정.
+
+    N회 시행은 서로 완전히 독립적이므로 스레드풀로 동시에 요청을 보낸다.
+    vLLM처럼 continuous batching을 지원하는 서버에서는 이걸로 실제 소요 시간이
+    max_workers배 가까이 줄어든다.
+    """
+    with ThreadPoolExecutor(max_workers=max(1, min(max_workers, n_trials))) as executor:
+        futures = [
+            executor.submit(
+                run_single_trial, model, system_prompt, user_prompt,
+                api_base=api_base, api_key=api_key,
+            )
+            for _ in range(n_trials)
+        ]
+        answers = [f.result() for f in futures]
+
     valid = [a for a in answers if a is not None]
     if not valid:
         return None, answers
@@ -277,22 +318,32 @@ def evaluate(
     stage: int,
     n_trials: int = 1,
     translation_model: Optional[str] = None,
+    api_base: Optional[str] = None,
+    api_key: Optional[str] = None,
+    max_workers: int = 4,
     verbose: bool = True,
 ) -> dict:
     """
     stage 0~4: 문항당 1회 채점.
     stage 5   : self-consistency(N trials, 다수결) 적용.
     """
+    translation_model = translation_model or model
     results = []
     correct = 0
 
     for q in questions:
+        system_prompt, user_prompt = build_prompt(
+            q, stage, translation_model, api_base=api_base, api_key=api_key
+        )
         if stage >= 5:
             answer, trials = run_self_consistency(
-                q, model, n_trials=n_trials, translation_model=translation_model
+                system_prompt, user_prompt, model, n_trials=n_trials,
+                api_base=api_base, api_key=api_key, max_workers=max_workers,
             )
         else:
-            answer = run_single_trial(q, model, stage=stage, translation_model=translation_model)
+            answer = run_single_trial(
+                model, system_prompt, user_prompt, api_base=api_base, api_key=api_key
+            )
             trials = [answer]
 
         is_correct = answer == q.correct_answer
@@ -357,6 +408,19 @@ def main():
         "--translation-model", default=None,
         help="번역에 쓸 모델(기본값: --model과 동일). 번역만 저렴한 모델로 하고 싶을 때 사용",
     )
+    parser.add_argument(
+        "--api-base", default=None,
+        help="커스텀 OpenAI 호환 엔드포인트 (예: vLLM 서버 http://localhost:8000/v1). "
+             "이때 --model은 보통 openai/<served-model-name> 형태로 지정",
+    )
+    parser.add_argument(
+        "--api-key", default=None,
+        help="--api-base용 API 키. vLLM 등 인증이 없는 서버는 아무 문자열(예: sk-dummy)이면 됨",
+    )
+    parser.add_argument(
+        "--max-workers", type=int, default=4,
+        help="stage 5의 self-consistency N회 시행을 동시에 몇 개까지 병렬 요청할지 (기본 4)",
+    )
     parser.add_argument("--output", default=None, help="결과 JSON 저장 경로")
     args = parser.parse_args()
 
@@ -367,6 +431,9 @@ def main():
         stage=args.stage,
         n_trials=args.n_trials,
         translation_model=args.translation_model,
+        api_base=args.api_base,
+        api_key=args.api_key,
+        max_workers=args.max_workers,
     )
 
     print("\n=== SUMMARY ===")

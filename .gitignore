@@ -1,2 +1,11 @@
 __pycache__/
 *.pyc
+.DS_Store
+
+# 실제 국가시험 기출문제(공개 저장소에는 비공개로 유지, private team repo에만 올림)
+KTM_data/2022.json
+KTM_data/2023.json
+KTM_data/2024.json
+
+# 개인 데이터 수집 스크립트 (인증키 등 포함 가능성 있어 커밋 안 함)
+Collect_ktkp.py

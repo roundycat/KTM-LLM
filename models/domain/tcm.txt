@@ -1,0 +1,10 @@
+# 중국의학(TCM) 도메인 특화 LLM 목록 (형식은 general.txt와 동일)
+# repo id가 "???"인 항목은 정확한 HuggingFace repo id를 직접 확인해서 채워넣어야 함
+# (Zhongjing / Qibo / Sunsimiao / ShenNong-TCM 는 확실치 않아 비워둠)
+
+huatuogpt-o1-7b	FreedomIntelligence/HuatuoGPT-o1-7B
+huatuogpt-o1-8b	FreedomIntelligence/HuatuoGPT-o1-8B
+zhongjing	???
+qibo	???
+sunsimiao	???
+shennong-tcm	???

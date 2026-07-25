@@ -1,0 +1,9 @@
+# 서양의학 도메인 특화 LLM 목록 (형식은 general.txt와 동일)
+# repo id가 "???"인 항목은 정확한 HuggingFace repo id를 직접 확인해서 채워넣어야 함
+# (MedLLaMA2 는 확실치 않아 비워둠)
+
+medgemma-4b	google/medgemma-4b-it
+meditron-7b	epfl-llm/meditron-7b
+biomistral-7b	BioMistral/BioMistral-7B
+medllama2-7b	???
+openbiollm-8b	aaditya/Llama3-OpenBioLLM-8B
